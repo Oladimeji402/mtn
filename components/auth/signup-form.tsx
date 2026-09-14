@@ -1,0 +1,134 @@
+"use client";
+
+import * as React from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { AlertCircle, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/auth/password-input";
+import { PasswordStrength } from "@/components/auth/password-strength";
+import { signupSchema, type SignupValues } from "@/lib/validation";
+import { mockSignup } from "@/lib/services/auth";
+
+export function SignupForm() {
+  const router = useRouter();
+  const [submitError, setSubmitError] = React.useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<SignupValues>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: { username: "", email: "", password: "", confirmPassword: "" },
+  });
+
+  const password = watch("password") ?? "";
+
+  async function onSubmit(values: SignupValues) {
+    setSubmitError(null);
+    try {
+      await mockSignup(values);
+      router.push(`/verify-email?email=${encodeURIComponent(values.email)}`);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+      {submitError ? (
+        <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+          <AlertCircle className="mt-0.5 size-4 shrink-0" />
+          <span>{submitError}</span>
+        </div>
+      ) : null}
+
+      <div className="space-y-1.5">
+        <Label htmlFor="username">Username</Label>
+        <Input
+          id="username"
+          placeholder="e.g. chinedu.k"
+          autoComplete="username"
+          disabled={isSubmitting}
+          aria-invalid={!!errors.username}
+          aria-describedby={errors.username ? "username-error" : undefined}
+          {...register("username")}
+        />
+        {errors.username ? (
+          <p id="username-error" className="text-xs text-destructive">
+            {errors.username.message}
+          </p>
+        ) : null}
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          placeholder="you@example.com"
+          autoComplete="email"
+          disabled={isSubmitting}
+          aria-invalid={!!errors.email}
+          aria-describedby={errors.email ? "email-error" : undefined}
+          {...register("email")}
+        />
+        {errors.email ? (
+          <p id="email-error" className="text-xs text-destructive">
+            {errors.email.message}
+          </p>
+        ) : null}
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="password">Password</Label>
+        <PasswordInput
+          id="password"
+          autoComplete="new-password"
+          disabled={isSubmitting}
+          aria-invalid={!!errors.password}
+          aria-describedby="password-strength"
+          {...register("password")}
+        />
+        <div id="password-strength">
+          <PasswordStrength password={password} />
+        </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="confirmPassword">Confirm password</Label>
+        <PasswordInput
+          id="confirmPassword"
+          autoComplete="new-password"
+          disabled={isSubmitting}
+          aria-invalid={!!errors.confirmPassword}
+          aria-describedby={errors.confirmPassword ? "confirm-password-error" : undefined}
+          {...register("confirmPassword")}
+        />
+        {errors.confirmPassword ? (
+          <p id="confirm-password-error" className="text-xs text-destructive">
+            {errors.confirmPassword.message}
+          </p>
+        ) : null}
+      </div>
+
+      <Button type="submit" className="w-full" disabled={isSubmitting}>
+        {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : null}
+        Create Account
+      </Button>
+
+      <p className="text-center text-sm text-muted-foreground">
+        Already have an account?{" "}
+        <Link href="/login" className="font-medium text-foreground hover:underline">
+          Login
+        </Link>
+      </p>
+    </form>
+  );
+}
