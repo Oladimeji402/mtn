@@ -5,13 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, House, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/auth/password-input";
 import { loginSchema, type LoginValues } from "@/lib/validation";
-import { mockLogin } from "@/lib/services/auth";
+import { logIn } from "@/lib/services/auth";
 
 export function LoginForm({ redirectTo = "/dashboard" }: { redirectTo?: string }) {
   const router = useRouter();
@@ -29,10 +30,14 @@ export function LoginForm({ redirectTo = "/dashboard" }: { redirectTo?: string }
   async function onSubmit(values: LoginValues) {
     setSubmitError(null);
     try {
-      await mockLogin(values);
+      await logIn(values);
+      toast.success("Welcome back");
       router.push(redirectTo);
+      router.refresh();
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      setSubmitError(message);
+      toast.error(message);
     }
   }
 
@@ -96,6 +101,16 @@ export function LoginForm({ redirectTo = "/dashboard" }: { redirectTo?: string }
           Create one
         </Link>
       </p>
+
+      <div className="border-t pt-4 text-center">
+        <Link
+          href="/landing"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <House className="size-3.5" />
+          Visit our website
+        </Link>
+      </div>
     </form>
   );
 }

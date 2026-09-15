@@ -1,15 +1,11 @@
 import { CURRENT_USER_ID } from "@/lib/constants";
 import { mockDataPlans } from "@/lib/mock/data-plans";
 import { simulateDelay } from "@/lib/services/delay";
-import type { DataPlan, Transaction, WalletTransaction } from "@/types";
+import type { DataPlan, Transaction } from "@/types";
 
 /**
- * Mock purchase + wallet funding execution. Simulates the latency of a real
- * wallet-debit → VTU-provider round trip. No balance is actually persisted —
- * callers hold the resulting balance in local component state for this UI phase.
- *
- * The future backend owns balance checks, idempotency, and provider fulfilment;
- * this file only stands in for that round trip so the UI has real states to render.
+ * Mock airtime/data purchase execution — still simulated pending a VTU provider
+ * decision. Wallet funding is real now; see lib/actions/wallet.ts and lib/paystack.ts.
  */
 
 function generateReference(prefix: string) {
@@ -71,29 +67,5 @@ export async function submitDataPurchase(input: SubmitDataInput): Promise<Transa
     createdAt: now,
     completedAt: null,
     providerReference: `VTU-${Math.floor(10000000 + Math.random() * 89999999)}`,
-  };
-}
-
-export interface SubmitFundingInput {
-  amount: number;
-  walletBalanceBefore: number;
-}
-
-export async function submitWalletFunding(input: SubmitFundingInput): Promise<WalletTransaction> {
-  await simulateDelay(1800);
-  const now = new Date().toISOString();
-  const reference = generateReference("FUND");
-  return {
-    id: reference.toLowerCase(),
-    reference,
-    userId: CURRENT_USER_ID,
-    type: "funding",
-    direction: "credit",
-    amount: input.amount,
-    balanceBefore: input.walletBalanceBefore,
-    balanceAfter: input.walletBalanceBefore + input.amount,
-    status: "successful",
-    description: "Wallet funding via card",
-    createdAt: now,
   };
 }

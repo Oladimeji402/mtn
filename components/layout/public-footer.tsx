@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/layout/logo";
+import { APP_NAME } from "@/lib/constants";
 
 export function PublicFooter() {
   return (
@@ -7,7 +8,7 @@ export function PublicFooter() {
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <div className="flex flex-col gap-8 sm:flex-row sm:justify-between">
           <div className="space-y-3">
-            <Logo />
+            <Logo href="/landing" />
             <p className="max-w-xs text-sm text-muted-foreground">
               Buy MTN airtime and data from your wallet in seconds.
             </p>
@@ -38,8 +39,8 @@ export function PublicFooter() {
         </div>
 
         <div className="mt-10 flex flex-col gap-2 border-t pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <p>&copy; {new Date().getFullYear()} MTN Vend. All rights reserved.</p>
-          <p>MTN Vend is an independent airtime and data reseller and is not affiliated with MTN Nigeria.</p>
+          <p>&copy; {new Date().getFullYear()} {APP_NAME}. All rights reserved.</p>
+          <p>{APP_NAME} is an independent airtime and data reseller and is not affiliated with MTN Nigeria.</p>
         </div>
       </div>
     </footer>

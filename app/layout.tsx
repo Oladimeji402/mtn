@@ -1,7 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
+import { InstallPrompt } from "@/components/pwa/install-prompt";
+import { APP_NAME } from "@/lib/constants";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,11 +18,16 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "MTN Vend — Buy MTN Airtime & Data Easily",
-    template: "%s | MTN Vend",
+    default: `${APP_NAME} — Buy MTN Airtime & Data Easily`,
+    template: `%s | ${APP_NAME}`,
   },
   description:
     "Fund your wallet and buy MTN airtime and data in seconds. Fast, transparent, and reliable.",
+  appleWebApp: { capable: true, statusBarStyle: "default", title: APP_NAME },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#ffcb05",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -33,6 +40,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <TooltipProvider delayDuration={200}>
           {children}
           <Toaster position="top-center" />
+          <InstallPrompt />
         </TooltipProvider>
       </body>
     </html>

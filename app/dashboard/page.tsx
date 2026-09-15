@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { WalletBalanceCard } from "@/components/dashboard/wallet-balance-card";
-import { UsageProgress } from "@/components/dashboard/usage-progress";
+import { UsageStat } from "@/components/dashboard/usage-stat";
 import { TransactionCard } from "@/components/transactions/transaction-card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Receipt } from "lucide-react";
@@ -27,14 +27,14 @@ export default async function DashboardPage() {
 
       <div className="rounded-xl border border-border/70 bg-card p-4 sm:p-6">
         <div className="mb-4">
-          <p className="text-sm font-medium">Data Allowance</p>
+          <p className="text-sm font-medium">Data Purchased</p>
           <p className="text-xs text-muted-foreground">
-            Your data purchase limit for today and this month.
+            Each purchase is capped at 5GB — buy as many as you need.
           </p>
         </div>
-        <div className="grid gap-5 sm:grid-cols-2 sm:gap-6">
-          <UsageProgress label="Today" window={usage.daily} />
-          <UsageProgress label="This month" window={usage.monthly} />
+        <div className="grid grid-cols-2 gap-5">
+          <UsageStat label="Today" usedMB={usage.daily.usedMB} />
+          <UsageStat label="This month" usedMB={usage.monthly.usedMB} />
         </div>
       </div>
 

@@ -132,7 +132,6 @@ export interface Notification {
 
 export interface UsageWindow {
   usedMB: number;
-  limitMB: number;
 }
 
 export interface Usage {
@@ -192,7 +191,7 @@ export interface AdminDashboardStats {
 }
 
 export interface PlatformSettings {
-  dailyDataLimitGB: number;
-  monthlyDataLimitGB: number;
+  /** Hard per-purchase ceiling — there is no cumulative daily/monthly cap. */
+  maxPurchaseDataGB: number;
   minimumFundingAmount: number;
 }

@@ -18,7 +18,7 @@ import { AccountStatusBadge } from "@/components/shared/status-badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { formatDate, formatGB, formatNaira } from "@/lib/format";
-import { setUserStatus } from "@/lib/services/users";
+import { setUserStatusAction } from "@/lib/actions/admin";
 import { toast } from "sonner";
 import type { AdminUserListItem } from "@/types";
 
@@ -48,7 +48,7 @@ export function AdminUsersList({ users: initialUsers }: { users: AdminUserListIt
     setLoading(true);
     const nextStatus = pendingUser.status === "active" ? "disabled" : "active";
     try {
-      await setUserStatus(pendingUser.id, nextStatus);
+      await setUserStatusAction(pendingUser.id, nextStatus);
       setUsers((prev) =>
         prev.map((u) => (u.id === pendingUser.id ? { ...u, status: nextStatus } : u)),
       );

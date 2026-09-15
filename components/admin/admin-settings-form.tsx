@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { adminSettingsSchema, type AdminSettingsValues } from "@/lib/validation";
-import { updatePlatformSettings } from "@/lib/services/admin";
+import { updatePlatformSettingsAction } from "@/lib/actions/admin";
 import type { PlatformSettings } from "@/types";
 
 export function AdminSettingsForm({ settings }: { settings: PlatformSettings }) {
@@ -23,15 +23,14 @@ export function AdminSettingsForm({ settings }: { settings: PlatformSettings }) 
   } = useForm<AdminSettingsValues>({
     resolver: zodResolver(adminSettingsSchema),
     defaultValues: {
-      dailyDataLimitGB: settings.dailyDataLimitGB,
-      monthlyDataLimitGB: settings.monthlyDataLimitGB,
+      maxPurchaseDataGB: settings.maxPurchaseDataGB,
     },
   });
 
   async function onSubmit(values: AdminSettingsValues) {
     setSubmitError(null);
     try {
-      const saved = await updatePlatformSettings({ ...settings, ...values });
+      const saved = await updatePlatformSettingsAction({ ...settings, ...values });
       reset(saved);
       toast.success("Settings saved");
     } catch (err) {
@@ -48,33 +47,24 @@ export function AdminSettingsForm({ settings }: { settings: PlatformSettings }) 
         </div>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="dailyDataLimitGB">Daily data limit (GB)</Label>
-          <Input
-            id="dailyDataLimitGB"
-            type="number"
-            disabled={isSubmitting}
-            aria-invalid={!!errors.dailyDataLimitGB}
-            {...register("dailyDataLimitGB")}
-          />
-          {errors.dailyDataLimitGB ? (
-            <p className="text-xs text-destructive">{errors.dailyDataLimitGB.message}</p>
-          ) : null}
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="monthlyDataLimitGB">Monthly data limit (GB)</Label>
-          <Input
-            id="monthlyDataLimitGB"
-            type="number"
-            disabled={isSubmitting}
-            aria-invalid={!!errors.monthlyDataLimitGB}
-            {...register("monthlyDataLimitGB")}
-          />
-          {errors.monthlyDataLimitGB ? (
-            <p className="text-xs text-destructive">{errors.monthlyDataLimitGB.message}</p>
-          ) : null}
-        </div>
+      <div className="space-y-1.5 sm:max-w-xs">
+        <Label htmlFor="maxPurchaseDataGB">Maximum data per purchase (GB)</Label>
+        <Input
+          id="maxPurchaseDataGB"
+          type="number"
+          step="0.5"
+          disabled={isSubmitting}
+          aria-invalid={!!errors.maxPurchaseDataGB}
+          {...register("maxPurchaseDataGB")}
+        />
+        {errors.maxPurchaseDataGB ? (
+          <p className="text-xs text-destructive">{errors.maxPurchaseDataGB.message}</p>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            No cumulative daily or monthly cap — customers can buy as many purchases at or
+            under this size as they want.
+          </p>
+        )}
       </div>
 
       <div className="flex items-center justify-between border-t pt-4">

@@ -14,6 +14,17 @@ export function isMtnNumber(phone: string) {
   return MTN_PREFIXES.some((prefix) => digits.startsWith(prefix));
 }
 
+/** General Nigerian phone number — used for contact numbers (any network). */
+export const nigerianPhoneSchema = z
+  .string()
+  .trim()
+  .min(1, "Phone number is required")
+  .transform((v) => v.replace(/\s/g, ""))
+  .refine((v) => nigerianPhoneRegex.test(v), {
+    message: "Enter a valid 11-digit Nigerian phone number",
+  });
+
+/** MTN-only — used where the number is the actual recipient of a purchase. */
 export const phoneNumberSchema = z
   .string()
   .trim()
@@ -46,8 +57,12 @@ export const signupSchema = z
   .object({
     username: usernameSchema,
     email: emailSchema,
+    phone: nigerianPhoneSchema,
     password: passwordSchema,
     confirmPassword: z.string().min(1, "Please confirm your password"),
+    agreeToTerms: z.boolean().refine((v) => v === true, {
+      message: "You must agree to the Terms & Conditions to continue",
+    }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -120,13 +135,6 @@ export const changePasswordSchema = z
 
 export type ChangePasswordValues = z.infer<typeof changePasswordSchema>;
 
-export const updateProfileSchema = z.object({
-  username: usernameSchema,
-  email: emailSchema,
-});
-
-export type UpdateProfileValues = z.infer<typeof updateProfileSchema>;
-
 export const adminLoginSchema = z.object({
   identifier: z.string().trim().min(1, "Email or username is required"),
   password: z.string().min(1, "Password is required"),
@@ -135,8 +143,7 @@ export const adminLoginSchema = z.object({
 export type AdminLoginValues = z.infer<typeof adminLoginSchema>;
 
 export const adminSettingsSchema = z.object({
-  dailyDataLimitGB: z.coerce.number().min(1, "Must be at least 1GB").max(1000),
-  monthlyDataLimitGB: z.coerce.number().min(1, "Must be at least 1GB").max(10000),
+  maxPurchaseDataGB: z.coerce.number().min(0.5, "Must be at least 0.5GB").max(50),
 });
 
 export type AdminSettingsValues = z.infer<typeof adminSettingsSchema>;

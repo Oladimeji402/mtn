@@ -44,8 +44,8 @@ const benefits = [
   },
   {
     icon: BarChart3,
-    title: "Usage you can track",
-    description: "See daily and monthly data usage against your limit at a glance.",
+    title: "Buy as much as you need",
+    description: "Each data purchase is capped at 5GB — buy as many as you need, no monthly ceiling.",
   },
   {
     icon: Bell,
@@ -146,24 +146,34 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="how-it-works" className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+      <section id="how-it-works" className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20">
         <div className="mb-10 max-w-xl space-y-2">
-          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">How it works</h2>
-          <p className="text-muted-foreground">
-            Four simple steps from sign up to a completed purchase.
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            How it works
           </p>
+          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            Four steps to your first purchase
+          </h2>
+          <p className="text-muted-foreground">No complicated setup — you&apos;re topped up in minutes.</p>
         </div>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <ol className="space-y-8">
           {steps.map((step, i) => (
-            <div key={step.title} className="space-y-2 rounded-lg border p-5">
-              <span className="text-sm font-medium text-muted-foreground">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <p className="font-medium">{step.title}</p>
-              <p className="text-sm text-muted-foreground">{step.description}</p>
-            </div>
+            <li key={step.title} className="relative flex gap-4 pl-0">
+              <div className="flex flex-col items-center">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-semibold text-brand-foreground">
+                  {i + 1}
+                </span>
+                {i < steps.length - 1 ? (
+                  <span className="mt-1 w-px flex-1 bg-border" aria-hidden />
+                ) : null}
+              </div>
+              <div className="pb-2">
+                <p className="font-medium">{step.title}</p>
+                <p className="text-sm text-muted-foreground">{step.description}</p>
+              </div>
+            </li>
           ))}
-        </div>
+        </ol>
       </section>
 
       <section id="benefits" className="border-y bg-secondary/40">
@@ -240,18 +250,23 @@ export default function HomePage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-        <div className="flex flex-col items-center gap-6 rounded-xl border bg-card px-6 py-14 text-center">
-          <h2 className="max-w-md text-2xl font-semibold tracking-tight sm:text-3xl">
+        <div className="flex flex-col items-center gap-6 rounded-2xl bg-gradient-to-br from-brand to-amber-500 px-6 py-14 text-center">
+          <h2 className="max-w-md text-2xl font-semibold tracking-tight text-brand-foreground sm:text-3xl">
             Fund your wallet and make your first purchase today
           </h2>
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Button size="lg" asChild>
+            <Button size="lg" variant="secondary" asChild>
               <Link href="/signup">
                 Create Account
                 <ArrowRight className="size-4" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" asChild>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-brand-foreground/30 bg-transparent text-brand-foreground hover:bg-white/10"
+              asChild
+            >
               <Link href="/login">Login</Link>
             </Button>
           </div>

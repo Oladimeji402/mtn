@@ -1,19 +1,52 @@
-import { CURRENT_USER_ID } from "@/lib/constants";
-import { mockNotifications } from "@/lib/mock/notifications";
-import { simulateDelay } from "@/lib/services/delay";
+import { createClient } from "@/lib/supabase/server";
 import type { Notification } from "@/types";
 
-export async function getNotifications(): Promise<Notification[]> {
-  await simulateDelay(400);
-  return mockNotifications
-    .filter((n) => n.userId === CURRENT_USER_ID)
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+function toNotification(row: {
+  id: string;
+  user_id: string;
+  type: Notification["type"];
+  title: string;
+  message: string;
+  read: boolean;
+  created_at: string;
+}): Notification {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    type: row.type,
+    title: row.title,
+    message: row.message,
+    read: row.read,
+    createdAt: row.created_at,
+  };
 }
 
-/** Mock only: returns the updated record without persisting it. */
+export async function getNotifications(): Promise<Notification[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from("notifications")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(toNotification);
+}
+
 export async function markNotificationRead(id: string): Promise<Notification | null> {
-  await simulateDelay(200);
-  const notification = mockNotifications.find((n) => n.id === id);
-  if (!notification) return null;
-  return { ...notification, read: true };
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("notifications")
+    .update({ read: true })
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  if (error || !data) return null;
+  return toNotification(data);
 }

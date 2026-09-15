@@ -7,12 +7,22 @@ import { formatNaira } from "@/lib/format";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 
 const quickActions = [
-  { href: "/dashboard/airtime", label: "Buy Airtime", icon: Smartphone },
-  { href: "/dashboard/data", label: "Buy Data", icon: Wifi },
+  {
+    href: "/dashboard/airtime",
+    label: "Buy Airtime",
+    icon: Smartphone,
+    iconClassName: "bg-brand/15 text-brand-foreground",
+  },
+  {
+    href: "/dashboard/data",
+    label: "Buy Data",
+    icon: Wifi,
+    iconClassName: "bg-info/10 text-info",
+  },
 ];
 
 export function WalletBalanceCard({ balance }: { balance: number }) {
-  const [visible, setVisible] = useLocalStorage("mtn-vend-balance-visible", true);
+  const [visible, setVisible] = useLocalStorage("bunben-balance-visible", true);
 
   return (
     <div className="rounded-2xl bg-secondary/60 p-4 sm:p-5">
@@ -46,7 +56,9 @@ export function WalletBalanceCard({ balance }: { balance: number }) {
             href={action.href}
             className="flex items-center gap-2.5 rounded-xl bg-background px-3 py-2.5 transition-colors active:bg-background/70"
           >
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
+            <span
+              className={`flex size-9 shrink-0 items-center justify-center rounded-full ${action.iconClassName}`}
+            >
               <action.icon className="size-4" />
             </span>
             <span className="text-sm font-medium">{action.label}</span>

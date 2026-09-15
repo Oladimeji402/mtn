@@ -6,10 +6,16 @@ export const metadata: Metadata = {
   title: "Login",
 };
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ redirectTo?: string }>;
+}) {
+  const { redirectTo } = await searchParams;
+
   return (
     <AuthCard title="Welcome back" description="Login to manage your wallet and purchases.">
-      <LoginForm />
+      <LoginForm redirectTo={redirectTo || "/dashboard"} />
     </AuthCard>
   );
 }

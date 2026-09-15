@@ -6,6 +6,7 @@ import { LogOut, ShieldCheck } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { adminNavItems } from "@/components/admin/admin-nav-items";
 import { cn } from "@/lib/utils";
+import { APP_NAME } from "@/lib/constants";
 
 export function AdminMobileNavSheet({
   open,
@@ -22,7 +23,7 @@ export function AdminMobileNavSheet({
         <SheetHeader className="border-b border-zinc-800">
           <SheetTitle className="flex items-center gap-2 text-zinc-100">
             <ShieldCheck className="size-4.5 text-brand" />
-            MTN Vend Admin
+            {APP_NAME} Admin
           </SheetTitle>
         </SheetHeader>
         <nav className="flex flex-col gap-1 p-3">

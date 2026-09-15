@@ -5,12 +5,13 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { AlertCircle, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/auth/password-input";
 import { adminLoginSchema, type AdminLoginValues } from "@/lib/validation";
-import { mockAdminLogin } from "@/lib/services/auth";
+import { adminLogIn } from "@/lib/services/auth";
 
 export function AdminLoginForm() {
   const router = useRouter();
@@ -28,10 +29,14 @@ export function AdminLoginForm() {
   async function onSubmit(values: AdminLoginValues) {
     setSubmitError(null);
     try {
-      await mockAdminLogin(values);
+      await adminLogIn(values);
+      toast.success("Welcome back");
       router.push("/admin");
+      router.refresh();
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      setSubmitError(message);
+      toast.error(message);
     }
   }
 

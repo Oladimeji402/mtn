@@ -27,7 +27,7 @@ export function DashboardHeader({
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-background px-4 sm:h-16 sm:px-6">
       <div className="lg:hidden">
-        <Logo />
+        <Logo href="/dashboard" />
       </div>
 
       <div className="ml-auto flex items-center gap-1 sm:gap-2">

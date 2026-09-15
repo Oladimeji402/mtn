@@ -28,7 +28,7 @@ export default async function ProfilePage() {
           <p className="font-medium">Security</p>
           <p className="text-sm text-muted-foreground">Change your account password.</p>
         </div>
-        <ChangePasswordForm />
+        <ChangePasswordForm email={user.email} />
       </section>
 
       <section className="space-y-4 rounded-xl border bg-card p-5 sm:p-6">

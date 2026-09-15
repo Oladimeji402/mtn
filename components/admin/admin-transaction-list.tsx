@@ -43,7 +43,7 @@ export function AdminTransactionList({ transactions }: { transactions: AdminTran
         t.phoneNumber.includes(query);
       return matchesStatus && matchesType && matchesDate && matchesSearch;
     });
-  }, [transactions, search, status, type, date]);
+  }, [transactions, search, status, type, date, now]);
 
   return (
     <div className="space-y-4">

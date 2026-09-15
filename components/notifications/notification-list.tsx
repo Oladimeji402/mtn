@@ -11,11 +11,12 @@ import {
   XCircle,
   type LucideIcon,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { formatRelativeTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { markNotificationRead } from "@/lib/services/notifications";
+import { markNotificationReadAction } from "@/lib/actions/notifications";
 import type { Notification, NotificationType } from "@/types";
 
 const notificationIcon: Record<NotificationType, { icon: LucideIcon; className: string }> = {
@@ -35,12 +36,26 @@ export function NotificationList({ notifications }: { notifications: Notificatio
   const unreadCount = items.filter((n) => !n.read).length;
 
   async function handleMarkRead(id: string) {
+    const wasRead = items.find((n) => n.id === id)?.read ?? false;
     setItems((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
-    await markNotificationRead(id);
+    try {
+      await markNotificationReadAction(id);
+    } catch {
+      setItems((prev) => prev.map((n) => (n.id === id ? { ...n, read: wasRead } : n)));
+      toast.error("Couldn't mark as read. Please try again.");
+    }
   }
 
-  function handleMarkAllRead() {
+  async function handleMarkAllRead() {
+    const unread = items.filter((n) => !n.read).map((n) => n.id);
     setItems((prev) => prev.map((n) => ({ ...n, read: true })));
+    try {
+      await Promise.all(unread.map((id) => markNotificationReadAction(id)));
+      toast.success("All notifications marked as read");
+    } catch {
+      setItems((prev) => prev.map((n) => (unread.includes(n.id) ? { ...n, read: false } : n)));
+      toast.error("Couldn't mark all as read. Please try again.");
+    }
   }
 
   if (items.length === 0) {

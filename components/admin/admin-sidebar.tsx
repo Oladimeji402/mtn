@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { LogOut, ShieldCheck } from "lucide-react";
 import { adminNavItems } from "@/components/admin/admin-nav-items";
 import { cn } from "@/lib/utils";
+import { APP_NAME } from "@/lib/constants";
 
 export function AdminSidebar() {
   const pathname = usePathname();
@@ -15,7 +16,7 @@ export function AdminSidebar() {
         <span className="flex size-7 items-center justify-center rounded-md bg-brand text-brand-foreground">
           <ShieldCheck className="size-4" />
         </span>
-        <span className="font-semibold text-zinc-100">MTN Vend Admin</span>
+        <span className="font-semibold text-zinc-100">{APP_NAME} Admin</span>
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {adminNavItems.map((item) => {

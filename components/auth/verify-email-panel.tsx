@@ -1,20 +1,26 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
-import { AlertCircle, CircleCheckBig, Loader2, MailCheck } from "lucide-react";
+import { AlertCircle, Loader2, MailCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { maskEmail } from "@/lib/format";
-import { mockResendVerification, mockVerifyEmail } from "@/lib/services/auth";
+import { resendVerification } from "@/lib/services/auth";
 
 const RESEND_SECONDS = 60;
 
-export function VerifyEmailPanel({ email }: { email: string | null }) {
+export function VerifyEmailPanel({
+  email,
+  linkError,
+}: {
+  email: string | null;
+  linkError?: boolean;
+}) {
   const [countdown, setCountdown] = React.useState(RESEND_SECONDS);
   const [resending, setResending] = React.useState(false);
-  const [verifying, setVerifying] = React.useState(false);
-  const [verified, setVerified] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
+  const [sent, setSent] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(
+    linkError ? "That link is invalid or has expired. Request a new one below." : null,
+  );
 
   React.useEffect(() => {
     if (countdown <= 0) return;
@@ -23,48 +29,18 @@ export function VerifyEmailPanel({ email }: { email: string | null }) {
   }, [countdown]);
 
   async function handleResend() {
+    if (!email) return;
     setError(null);
     setResending(true);
     try {
-      await mockResendVerification();
+      await resendVerification(email);
       setCountdown(RESEND_SECONDS);
-    } catch {
-      setError("Couldn't resend the email. Please try again.");
+      setSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't resend the email. Please try again.");
     } finally {
       setResending(false);
     }
-  }
-
-  async function handleSimulateVerify() {
-    setError(null);
-    setVerifying(true);
-    try {
-      await mockVerifyEmail();
-      setVerified(true);
-    } catch {
-      setError("We couldn't verify your email. Please try again.");
-    } finally {
-      setVerifying(false);
-    }
-  }
-
-  if (verified) {
-    return (
-      <div className="space-y-4 text-center">
-        <div className="mx-auto flex size-11 items-center justify-center rounded-full bg-success/10">
-          <CircleCheckBig className="size-5 text-success" />
-        </div>
-        <div className="space-y-1">
-          <p className="font-medium">Email verified</p>
-          <p className="text-sm text-muted-foreground">
-            Your account is ready. You can now login and start using your wallet.
-          </p>
-        </div>
-        <Button className="w-full" asChild>
-          <Link href="/login">Continue to login</Link>
-        </Button>
-      </div>
-    );
   }
 
   return (
@@ -80,7 +56,7 @@ export function VerifyEmailPanel({ email }: { email: string | null }) {
           <span className="font-medium text-foreground">
             {email ? maskEmail(email) : "your email address"}
           </span>
-          . Click the link to activate your account.
+          . Click the link to activate your account, then come back and login.
         </p>
       </div>
 
@@ -89,29 +65,28 @@ export function VerifyEmailPanel({ email }: { email: string | null }) {
           <AlertCircle className="mt-0.5 size-4 shrink-0" />
           <span>{error}</span>
         </div>
+      ) : sent ? (
+        <div className="flex items-start gap-2 rounded-md border border-success/30 bg-success/5 p-3 text-left text-sm text-success">
+          <MailCheck className="mt-0.5 size-4 shrink-0" />
+          <span>Verification link resent.</span>
+        </div>
       ) : null}
 
-      <div className="space-y-2">
-        <Button
-          variant="outline"
-          className="w-full"
-          disabled={countdown > 0 || resending}
-          onClick={handleResend}
-        >
-          {resending ? <Loader2 className="size-4 animate-spin" /> : null}
-          {countdown > 0 ? `Resend link in ${countdown}s` : "Resend verification link"}
-        </Button>
-      </div>
+      <Button
+        variant="outline"
+        className="w-full"
+        disabled={!email || countdown > 0 || resending}
+        onClick={handleResend}
+      >
+        {resending ? <Loader2 className="size-4 animate-spin" /> : null}
+        {countdown > 0 ? `Resend link in ${countdown}s` : "Resend verification link"}
+      </Button>
 
-      <div className="space-y-2 border-t pt-4">
+      {!email ? (
         <p className="text-xs text-muted-foreground">
-          Preview mode — no email was actually sent.
+          Came here directly? Sign up again to get a fresh verification link.
         </p>
-        <Button variant="secondary" className="w-full" onClick={handleSimulateVerify} disabled={verifying}>
-          {verifying ? <Loader2 className="size-4 animate-spin" /> : null}
-          Simulate clicking the verification link
-        </Button>
-      </div>
+      ) : null}
     </div>
   );
 }

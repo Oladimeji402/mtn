@@ -93,14 +93,7 @@ export const mockDataPlans: DataPlan[] = [
     price: 1500,
     category: "monthly",
   },
-  {
-    id: "dp_10gb_30d",
-    network: "MTN",
-    size: "10GB",
-    sizeInMB: 10000,
-    validityDays: 30,
-    validityLabel: "30 days",
-    price: 3000,
-    category: "monthly",
-  },
+  // No plan exceeds 5GB by design (client decision, 2026-09-15): purchases are capped
+  // at 5GB each: customers buy as many separate 5GB-or-under purchases as they want,
+  // rather than a single larger plan. See supabase/migrations/0006_*.
 ];

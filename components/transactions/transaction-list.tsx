@@ -1,11 +1,14 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { Receipt } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   TransactionFilters,
   type TransactionFilterValue,
 } from "@/components/transactions/transaction-filters";
+import { TransactionStats } from "@/components/transactions/transaction-stats";
 import { TransactionTable } from "@/components/transactions/transaction-table";
 import { TransactionCard } from "@/components/transactions/transaction-card";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -30,8 +33,25 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
     });
   }, [transactions, filter, search]);
 
+  if (transactions.length === 0) {
+    return (
+      <EmptyState
+        icon={Receipt}
+        title="No transactions yet"
+        description="Your airtime and data purchases will show up here once you make one."
+        action={
+          <Button asChild size="sm">
+            <Link href="/dashboard/data">Buy Data Now</Link>
+          </Button>
+        }
+      />
+    );
+  }
+
   return (
     <div className="space-y-4">
+      <TransactionStats transactions={transactions} active={filter} onSelect={setFilter} />
+
       <TransactionFilters
         filter={filter}
         onFilterChange={setFilter}

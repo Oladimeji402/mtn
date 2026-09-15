@@ -5,11 +5,12 @@ import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { AlertCircle, ArrowLeft, Loader2, MailCheck } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { forgotPasswordSchema, type ForgotPasswordValues } from "@/lib/validation";
-import { mockForgotPassword } from "@/lib/services/auth";
+import { forgotPassword } from "@/lib/services/auth";
 import { maskEmail } from "@/lib/format";
 
 export function ForgotPasswordForm() {
@@ -28,10 +29,13 @@ export function ForgotPasswordForm() {
   async function onSubmit(values: ForgotPasswordValues) {
     setSubmitError(null);
     try {
-      await mockForgotPassword(values);
+      await forgotPassword(values);
       setSentTo(values.email);
+      toast.success("Reset link sent");
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      setSubmitError(message);
+      toast.error(message);
     }
   }
 

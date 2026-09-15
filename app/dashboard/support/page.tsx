@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
-import { Mail, MessageCircle } from "lucide-react";
+import { ArrowUpRight, Mail, MessageCircle, Phone } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
+import { SUPPORT_EMAIL, SUPPORT_PHONE } from "@/lib/constants";
+import { formatPhoneNumber } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Support" };
 
@@ -18,8 +20,37 @@ const faqs = [
     a: "Yes, you can enter any valid MTN number when buying airtime or data — it doesn't have to match your account.",
   },
   {
-    q: "How do I know if my account has a daily or monthly data limit?",
-    a: "Your current usage against the platform's daily and monthly limits is shown on your dashboard.",
+    q: "Is there a limit on how much data I can buy?",
+    a: "Each data purchase is capped at 5GB. There's no limit on the number of purchases — buy as many 5GB (or smaller) plans as you need.",
+  },
+];
+
+const internationalPhone = `+234${SUPPORT_PHONE.slice(1)}`;
+
+const channels = [
+  {
+    label: "WhatsApp Support",
+    description: "Chat with us for quick help.",
+    contact: formatPhoneNumber(SUPPORT_PHONE),
+    href: `https://wa.me/${internationalPhone.replace("+", "")}`,
+    icon: MessageCircle,
+    iconClassName: "bg-success/10 text-success",
+  },
+  {
+    label: "Call Support",
+    description: "Speak with our support team.",
+    contact: formatPhoneNumber(SUPPORT_PHONE),
+    href: `tel:${internationalPhone}`,
+    icon: Phone,
+    iconClassName: "bg-brand/15 text-brand-foreground",
+  },
+  {
+    label: "Email Support",
+    description: "We typically respond within a day.",
+    contact: SUPPORT_EMAIL,
+    href: `mailto:${SUPPORT_EMAIL}`,
+    icon: Mail,
+    iconClassName: "bg-info/10 text-info",
   },
 ];
 
@@ -28,28 +59,26 @@ export default function SupportPage() {
     <div className="space-y-6">
       <PageHeader title="Support" description="Get help or find answers to common questions." />
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-3 rounded-xl border bg-card p-5">
-          <div className="flex size-9 items-center justify-center rounded-md bg-success/10">
-            <MessageCircle className="size-4.5 text-success" />
-          </div>
-          <div>
-            <p className="font-medium">WhatsApp Support</p>
-            <p className="text-sm text-muted-foreground">Chat with us for quick help.</p>
-          </div>
-          <p className="text-sm font-medium text-muted-foreground">+234 000 000 0000 (placeholder)</p>
-        </div>
-
-        <div className="space-y-3 rounded-xl border bg-card p-5">
-          <div className="flex size-9 items-center justify-center rounded-md bg-info/10">
-            <Mail className="size-4.5 text-info" />
-          </div>
-          <div>
-            <p className="font-medium">Email Support</p>
-            <p className="text-sm text-muted-foreground">We typically respond within a day.</p>
-          </div>
-          <p className="text-sm font-medium text-muted-foreground">support@example.com (placeholder)</p>
-        </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        {channels.map((channel) => (
+          <a
+            key={channel.label}
+            href={channel.href}
+            className="group flex flex-col gap-3 rounded-xl border bg-card p-5 transition-colors hover:bg-secondary/40"
+          >
+            <div className="flex items-start justify-between">
+              <span className={`flex size-9 items-center justify-center rounded-md ${channel.iconClassName}`}>
+                <channel.icon className="size-4.5" />
+              </span>
+              <ArrowUpRight className="size-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+            </div>
+            <div>
+              <p className="font-medium">{channel.label}</p>
+              <p className="text-sm text-muted-foreground">{channel.description}</p>
+            </div>
+            <p className="text-sm font-medium">{channel.contact}</p>
+          </a>
+        ))}
       </div>
 
       <div className="rounded-xl border bg-card p-5 sm:p-6">

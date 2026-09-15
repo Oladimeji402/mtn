@@ -9,13 +9,13 @@ export const metadata: Metadata = {
 export default async function VerifyEmailPage({
   searchParams,
 }: {
-  searchParams: Promise<{ email?: string }>;
+  searchParams: Promise<{ email?: string; error?: string }>;
 }) {
-  const { email } = await searchParams;
+  const { email, error } = await searchParams;
 
   return (
     <AuthCard title="One last step">
-      <VerifyEmailPanel email={email ?? null} />
+      <VerifyEmailPanel email={email ?? null} linkError={error === "1"} />
     </AuthCard>
   );
 }

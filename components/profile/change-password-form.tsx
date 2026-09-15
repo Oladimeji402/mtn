@@ -1,17 +1,20 @@
 "use client";
 
+import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/auth/password-input";
 import { PasswordStrength } from "@/components/auth/password-strength";
 import { changePasswordSchema, type ChangePasswordValues } from "@/lib/validation";
-import { simulateDelay } from "@/lib/services/delay";
+import { changePassword } from "@/lib/services/auth";
 
-export function ChangePasswordForm() {
+export function ChangePasswordForm({ email }: { email: string }) {
+  const [submitError, setSubmitError] = React.useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -25,14 +28,26 @@ export function ChangePasswordForm() {
 
   const newPassword = watch("newPassword") ?? "";
 
-  async function onSubmit() {
-    await simulateDelay(800);
-    toast.success("Password changed");
-    reset();
+  async function onSubmit(values: ChangePasswordValues) {
+    setSubmitError(null);
+    try {
+      await changePassword(email, values.currentPassword, values.newPassword);
+      toast.success("Password changed");
+      reset();
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+    }
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+      {submitError ? (
+        <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+          <AlertCircle className="mt-0.5 size-4 shrink-0" />
+          <span>{submitError}</span>
+        </div>
+      ) : null}
+
       <div className="space-y-1.5">
         <Label htmlFor="currentPassword">Current password</Label>
         <PasswordInput

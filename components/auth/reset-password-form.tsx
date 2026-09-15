@@ -5,12 +5,13 @@ import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { AlertCircle, ArrowLeft, CircleCheckBig, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/auth/password-input";
 import { PasswordStrength } from "@/components/auth/password-strength";
 import { resetPasswordSchema, type ResetPasswordValues } from "@/lib/validation";
-import { mockResetPassword } from "@/lib/services/auth";
+import { resetPassword } from "@/lib/services/auth";
 
 export function ResetPasswordForm() {
   const [submitError, setSubmitError] = React.useState<string | null>(null);
@@ -31,10 +32,13 @@ export function ResetPasswordForm() {
   async function onSubmit(values: ResetPasswordValues) {
     setSubmitError(null);
     try {
-      await mockResetPassword(values);
+      await resetPassword(values);
       setSuccess(true);
+      toast.success("Password changed");
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      setSubmitError(message);
+      toast.error(message);
     }
   }
 

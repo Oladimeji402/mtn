@@ -4,15 +4,17 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { AlertCircle, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/auth/password-input";
 import { PasswordStrength } from "@/components/auth/password-strength";
 import { signupSchema, type SignupValues } from "@/lib/validation";
-import { mockSignup } from "@/lib/services/auth";
+import { signUp } from "@/lib/services/auth";
 
 export function SignupForm() {
   const router = useRouter();
@@ -22,10 +24,18 @@ export function SignupForm() {
     register,
     handleSubmit,
     watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<SignupValues>({
     resolver: zodResolver(signupSchema),
-    defaultValues: { username: "", email: "", password: "", confirmPassword: "" },
+    defaultValues: {
+      username: "",
+      email: "",
+      phone: "",
+      password: "",
+      confirmPassword: "",
+      agreeToTerms: false,
+    },
   });
 
   const password = watch("password") ?? "";
@@ -33,10 +43,13 @@ export function SignupForm() {
   async function onSubmit(values: SignupValues) {
     setSubmitError(null);
     try {
-      await mockSignup(values);
+      await signUp(values);
+      toast.success("Account created — check your email to verify.");
       router.push(`/verify-email?email=${encodeURIComponent(values.email)}`);
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      setSubmitError(message);
+      toast.error(message);
     }
   }
 
@@ -87,6 +100,26 @@ export function SignupForm() {
       </div>
 
       <div className="space-y-1.5">
+        <Label htmlFor="phone">Phone number</Label>
+        <Input
+          id="phone"
+          type="tel"
+          inputMode="numeric"
+          placeholder="080X XXX XXXX"
+          autoComplete="tel"
+          disabled={isSubmitting}
+          aria-invalid={!!errors.phone}
+          aria-describedby={errors.phone ? "phone-error" : undefined}
+          {...register("phone")}
+        />
+        {errors.phone ? (
+          <p id="phone-error" className="text-xs text-destructive">
+            {errors.phone.message}
+          </p>
+        ) : null}
+      </div>
+
+      <div className="space-y-1.5">
         <Label htmlFor="password">Password</Label>
         <PasswordInput
           id="password"
@@ -115,6 +148,31 @@ export function SignupForm() {
           <p id="confirm-password-error" className="text-xs text-destructive">
             {errors.confirmPassword.message}
           </p>
+        ) : null}
+      </div>
+
+      <div className="space-y-1.5">
+        <div className="flex items-start gap-2">
+          <Controller
+            name="agreeToTerms"
+            control={control}
+            render={({ field }) => (
+              <Checkbox
+                id="agreeToTerms"
+                checked={field.value}
+                onCheckedChange={field.onChange}
+                disabled={isSubmitting}
+                aria-invalid={!!errors.agreeToTerms}
+                className="mt-0.5"
+              />
+            )}
+          />
+          <Label htmlFor="agreeToTerms" className="text-sm font-normal text-muted-foreground">
+            I agree to the Terms &amp; Conditions and Privacy Policy
+          </Label>
+        </div>
+        {errors.agreeToTerms ? (
+          <p className="text-xs text-destructive">{errors.agreeToTerms.message}</p>
         ) : null}
       </div>
 

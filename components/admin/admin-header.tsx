@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
+import { APP_NAME } from "@/lib/constants";
 
 export function AdminHeader({
   username,
@@ -30,7 +31,7 @@ export function AdminHeader({
         <Menu className="size-4.5" />
       </button>
 
-      <span className="text-sm font-medium lg:hidden">MTN Vend Admin</span>
+      <span className="text-sm font-medium lg:hidden">{APP_NAME} Admin</span>
 
       <div className="ml-auto">
         <DropdownMenu>

@@ -1,0 +1,11 @@
+-- Regression from 0003_security_hardening.sql: is_admin() is referenced inside RLS
+-- policies on tables anon can query (e.g. wallets_select, data_plans_select). Revoking
+-- EXECUTE from anon broke policy evaluation entirely for anonymous requests — Postgres
+-- needs to be able to CALL the function to get `false` out of it, even when the caller
+-- has no matching rows. This surfaced as "permission denied for function is_admin"
+-- instead of the intended "0 rows" for an anon SELECT.
+--
+-- is_admin() is a safe, side-effect-free read (checks membership in admin_users), so
+-- granting anon EXECUTE doesn't expose anything — it was over-tightened, not wrong to
+-- restrict in principle.
+grant execute on function public.is_admin to anon;
