@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { Bell, LifeBuoy, LogOut, Receipt, User } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Logo } from "@/components/layout/logo";
-import { cn } from "@/lib/utils";
 
 export function DashboardHeader({
   username,
@@ -24,26 +22,18 @@ export function DashboardHeader({
   unreadCount: number;
 }) {
   const initials = username.slice(0, 2).toUpperCase();
-  // On phones the dashboard home gets a native-style greeting bar that merges
-  // into the balance card below it. Every other screen keeps today's chrome.
-  const isHome = usePathname() === "/dashboard";
 
   return (
     <header
-      className={cn(
-        "sticky top-0 z-30 flex h-[calc(3.5rem+env(safe-area-inset-top))] items-center gap-3 border-b px-4 pt-[env(safe-area-inset-top)] backdrop-blur sm:h-16 sm:px-6 sm:pt-0",
-        isHome
-          ? "border-transparent bg-gradient-to-br from-brand to-amber-500 sm:border-border sm:bg-background/95 sm:bg-none"
-          : "bg-background/95",
-      )}
+      className="sticky top-0 z-30 flex h-[calc(3.5rem+env(safe-area-inset-top))] items-center gap-3 border-b border-transparent bg-gradient-to-br from-brand to-amber-500 px-4 pt-[env(safe-area-inset-top)] backdrop-blur sm:h-16 sm:border-border sm:bg-background/95 sm:bg-none sm:px-6 sm:pt-0"
     >
-      {isHome ? (
-        <p className="truncate text-base font-semibold text-brand-foreground sm:hidden">
-          Hi, {username}
-        </p>
-      ) : null}
+      {/* Greeting — always visible on mobile, hidden on sm+ */}
+      <p className="truncate text-base font-semibold text-brand-foreground sm:hidden">
+        Hi, {username}
+      </p>
 
-      <div className={cn("lg:hidden", isHome && "hidden sm:block")}>
+      {/* Logo — hidden on mobile (greeting takes its place), visible on sm+ */}
+      <div className="hidden sm:block lg:hidden">
         <Logo href="/dashboard" className="min-h-11" />
       </div>
 
@@ -51,21 +41,13 @@ export function DashboardHeader({
         <Button
           variant="ghost"
           size="icon"
-          className={cn(
-            "relative size-11 sm:size-10",
-            isHome &&
-              "text-brand-foreground hover:bg-white/25 hover:text-brand-foreground sm:text-foreground sm:hover:bg-accent",
-          )}
+          className="relative size-11 text-brand-foreground hover:bg-white/25 hover:text-brand-foreground sm:size-10 sm:text-foreground sm:hover:bg-accent sm:hover:text-foreground"
           asChild
         >
           <Link href="/dashboard/notifications" aria-label="Notifications">
             <Bell className="size-[19px] sm:size-4.5" />
             {unreadCount > 0 ? (
-              <span
-                className={cn(
-                  "absolute right-2 top-2 flex size-2 rounded-full bg-destructive sm:right-1.5 sm:top-1.5",
-                )}
-              />
+              <span className="absolute right-2 top-2 flex size-2 rounded-full bg-destructive sm:right-1.5 sm:top-1.5" />
             ) : null}
           </Link>
         </Button>
@@ -74,12 +56,7 @@ export function DashboardHeader({
           <DropdownMenuTrigger asChild>
             <button className="hidden items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex sm:size-auto">
               <Avatar className="size-9 sm:size-8">
-                <AvatarFallback
-                  className={cn(
-                    "bg-secondary text-xs font-medium",
-                    isHome && "bg-white/90 sm:bg-secondary",
-                  )}
-                >
+                <AvatarFallback className="bg-secondary text-xs font-medium">
                   {initials}
                 </AvatarFallback>
               </Avatar>
