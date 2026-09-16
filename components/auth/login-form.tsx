@@ -113,7 +113,7 @@ export function LoginForm({ redirectTo = "/dashboard" }: { redirectTo?: string }
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
           <House className="size-3.5" />
-          Home
+          Visit our website
         </Link>
       </div>
     </form>
