@@ -12,6 +12,7 @@ import { TransactionStats } from "@/components/transactions/transaction-stats";
 import { TransactionTable } from "@/components/transactions/transaction-table";
 import { TransactionCard } from "@/components/transactions/transaction-card";
 import { EmptyState } from "@/components/shared/empty-state";
+import { screenPadClass } from "@/lib/utils";
 import type { Transaction } from "@/types";
 
 export function TransactionList({ transactions }: { transactions: Transaction[] }) {
@@ -35,16 +36,18 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
 
   if (transactions.length === 0) {
     return (
-      <EmptyState
-        icon={Receipt}
-        title="No transactions yet"
-        description="Your airtime and data purchases will show up here once you make one."
-        action={
-          <Button asChild size="sm">
-            <Link href="/dashboard/data">Buy Data Now</Link>
-          </Button>
-        }
-      />
+      <div className={screenPadClass}>
+        <EmptyState
+          icon={Receipt}
+          title="No transactions yet"
+          description="Buy airtime or data to get started."
+          action={
+            <Button asChild size="sm">
+              <Link href="/dashboard/data">Buy data</Link>
+            </Button>
+          }
+        />
+      </div>
     );
   }
 
@@ -60,15 +63,17 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
       />
 
       {filtered.length === 0 ? (
-        <EmptyState
-          icon={Receipt}
-          title="No matching transactions"
-          description="Try a different filter or search term."
-        />
+        <div className={screenPadClass}>
+          <EmptyState
+            icon={Receipt}
+            title="No matching transactions"
+            description="Try a different filter or search term."
+          />
+        </div>
       ) : (
         <>
           <TransactionTable transactions={filtered} />
-          <div className="space-y-2 sm:hidden">
+          <div className="divide-y border-y sm:hidden">
             {filtered.map((t) => (
               <TransactionCard key={t.id} transaction={t} />
             ))}

@@ -33,7 +33,7 @@ export function ForgotPasswordForm() {
       setSentTo(values.email);
       toast.success("Reset link sent");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      const message = err instanceof Error ? err.message : "Something went wrong";
       setSubmitError(message);
       toast.error(message);
     }
@@ -48,11 +48,10 @@ export function ForgotPasswordForm() {
         <div className="space-y-1">
           <p className="font-medium">Check your email</p>
           <p className="text-sm text-muted-foreground">
-            If an account exists for {maskEmail(sentTo)}, we&apos;ve sent a link to reset
-            your password.
+            If an account exists for {maskEmail(sentTo)}, we sent a reset link.
           </p>
         </div>
-        <Button variant="outline" className="w-full" asChild>
+        <Button variant="outline" size="lg" className="w-full" asChild>
           <Link href="/login">
             <ArrowLeft className="size-4" />
             Back to login
@@ -63,7 +62,7 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+    <form onSubmit={handleSubmit(onSubmit)} className="w-full space-y-4 sm:mx-auto sm:w-[350px]" noValidate>
       {submitError ? (
         <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
           <AlertCircle className="mt-0.5 size-4 shrink-0" />
@@ -90,7 +89,7 @@ export function ForgotPasswordForm() {
         ) : null}
       </div>
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
+      <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
         {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : null}
         Send reset link
       </Button>

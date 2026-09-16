@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { TransactionDetail } from "@/components/transactions/transaction-detail";
 import { getTransaction } from "@/lib/services/transactions";
+import { screenPadClass } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Transaction Details" };
 
@@ -18,10 +19,10 @@ export default async function TransactionDetailPage({
   if (!transaction) notFound();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 sm:space-y-6">
       <Link
         href="/dashboard/transactions"
-        className="flex w-fit items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        className={`flex min-h-11 w-fit items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground ${screenPadClass}`}
       >
         <ArrowLeft className="size-4" />
         Back to Transactions

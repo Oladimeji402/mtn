@@ -14,7 +14,7 @@ export default async function VerifyEmailPage({
   const { email, error } = await searchParams;
 
   return (
-    <AuthCard title="One last step">
+    <AuthCard title="Verify your email">
       <VerifyEmailPanel email={email ?? null} linkError={error === "1"} />
     </AuthCard>
   );

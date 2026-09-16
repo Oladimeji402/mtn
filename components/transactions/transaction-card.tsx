@@ -2,9 +2,16 @@ import Link from "next/link";
 import { Smartphone, Wifi } from "lucide-react";
 import { TransactionStatusBadge } from "@/components/shared/status-badge";
 import { formatDateTime, formatNaira, formatPhoneNumber } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import type { Transaction } from "@/types";
 
-export function TransactionCard({ transaction }: { transaction: Transaction }) {
+export function TransactionCard({
+  transaction,
+  className,
+}: {
+  transaction: Transaction;
+  className?: string;
+}) {
   const Icon = transaction.type === "airtime" ? Smartphone : Wifi;
   const title =
     transaction.type === "airtime"
@@ -14,7 +21,10 @@ export function TransactionCard({ transaction }: { transaction: Transaction }) {
   return (
     <Link
       href={`/dashboard/transactions/${transaction.id}`}
-      className="flex items-center gap-3 rounded-lg border p-3.5 transition-colors hover:bg-secondary/50"
+      className={cn(
+        "flex min-h-16 items-center gap-3 px-4 py-3.5 transition-colors active:bg-secondary/50 sm:rounded-xl sm:border sm:p-3.5 sm:hover:bg-secondary/50",
+        className,
+      )}
     >
       <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-secondary">
         <Icon className="size-4.5" />

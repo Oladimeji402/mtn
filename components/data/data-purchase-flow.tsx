@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowLeft, CircleCheckBig, Info, Loader2, XCircle } from "lucide-react";
+import { ArrowLeft, CircleCheckBig, Loader2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,10 +15,12 @@ import {
 } from "@/components/ui/select";
 import { DataPlanGrid } from "@/components/data/data-plan-grid";
 import { InsufficientBalance } from "@/components/shared/insufficient-balance";
-import { CopyButton } from "@/components/shared/copy-button";
+import { PurchaseConfirmSheet } from "@/components/shared/purchase-confirm-sheet";
+import { useIsDesktop } from "@/hooks/use-is-desktop";
 import { isMtnNumber } from "@/lib/validation";
 import { formatNaira, formatPhoneNumber } from "@/lib/format";
 import { submitDataPurchase } from "@/lib/services/purchase";
+import { cn, screenPanelClass } from "@/lib/utils";
 import type { DataPlan, Transaction } from "@/types";
 
 type Step = "form" | "confirm" | "processing" | "success" | "failed";
@@ -31,6 +33,7 @@ export function DataPurchaseFlow({
   plans: DataPlan[];
   walletBalance: number;
 }) {
+  const isDesktop = useIsDesktop();
   const [step, setStep] = React.useState<Step>("form");
   const [outcome, setOutcome] = React.useState<Outcome>("success");
   const [phoneNumber, setPhoneNumber] = React.useState("");
@@ -78,13 +81,30 @@ export function DataPurchaseFlow({
     setOutcome("success");
   }
 
+  // Rendered into whichever confirm container the breakpoint selects — never both.
+  const outcomeField = (
+    <div className="space-y-1.5 rounded-lg border border-dashed p-3">
+      <Label htmlFor="outcome" className="text-xs text-muted-foreground">
+        Preview result (demo only)
+      </Label>
+      <Select value={outcome} onValueChange={(v) => setOutcome(v as Outcome)}>
+        <SelectTrigger id="outcome" className="w-full">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="success">Successful</SelectItem>
+          <SelectItem value="failed">Failed</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
   if (step === "processing") {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 rounded-xl border bg-card px-6 py-16 text-center">
+      <div className={cn(screenPanelClass, "flex flex-col items-center justify-center gap-3 py-16 text-center")}>
         <Loader2 className="size-8 animate-spin text-muted-foreground" />
         <div className="space-y-1">
-          <p className="font-medium">Submitting your purchase</p>
-          <p className="text-sm text-muted-foreground">Deducting from your wallet.</p>
+          <p className="font-medium">Buying data</p>
         </div>
       </div>
     );
@@ -92,42 +112,22 @@ export function DataPurchaseFlow({
 
   if (step === "success" && result) {
     return (
-      <div className="space-y-4 rounded-xl border bg-card px-6 py-10 text-center">
+      <div className={cn(screenPanelClass, "space-y-4 py-10 text-center")}>
         <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-success/10">
           <CircleCheckBig className="size-6 text-success" />
         </div>
         <div className="space-y-1">
-          <p className="text-lg font-medium">Payment successful</p>
+          <p className="text-lg font-medium">Data sent</p>
           <p className="text-sm text-muted-foreground">
-            Your MTN data purchase is being processed.
+            {result.dataPlan?.size} to {formatPhoneNumber(result.phoneNumber)}
           </p>
         </div>
 
-        <div className="mx-auto max-w-xs space-y-2 rounded-lg border bg-secondary/40 p-4 text-left text-sm">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Plan</span>
-            <span className="font-medium">{result.dataPlan?.size}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Number</span>
-            <span className="font-medium">{formatPhoneNumber(result.phoneNumber)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Amount</span>
-            <span className="font-medium">{formatNaira(result.amount)}</span>
-          </div>
-        </div>
-
-        <div className="mx-auto flex w-fit items-center gap-2 rounded-lg bg-secondary px-4 py-2">
-          <span className="font-mono text-xs text-muted-foreground">{result.reference}</span>
-          <CopyButton value={result.reference} label="" className="h-5 w-5 p-0" />
-        </div>
-
         <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:justify-center">
-          <Button asChild>
-            <Link href={`/dashboard/transactions/${result.id}`}>Track status</Link>
+          <Button size="lg" asChild>
+            <Link href={`/dashboard/transactions/${result.id}`}>View receipt</Link>
           </Button>
-          <Button variant="outline" onClick={reset}>
+          <Button variant="outline" size="lg" onClick={reset}>
             Buy again
           </Button>
         </div>
@@ -137,19 +137,17 @@ export function DataPurchaseFlow({
 
   if (step === "failed") {
     return (
-      <div className="space-y-4 rounded-xl border bg-card px-6 py-10 text-center">
+      <div className={cn(screenPanelClass, "space-y-4 py-10 text-center")}>
         <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-destructive/10">
           <XCircle className="size-6 text-destructive" />
         </div>
         <div className="space-y-1">
-          <p className="text-lg font-medium">Data purchase failed</p>
-          <p className="text-sm text-muted-foreground">
-            We couldn&apos;t complete this purchase. Your wallet was not charged.
-          </p>
+          <p className="text-lg font-medium">Couldn&apos;t buy data</p>
+          <p className="text-sm text-muted-foreground">Nothing was charged.</p>
         </div>
         <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:justify-center">
-          <Button onClick={() => setStep("confirm")}>Try again</Button>
-          <Button variant="outline" onClick={reset}>
+          <Button size="lg" onClick={() => setStep("confirm")}>Try again</Button>
+          <Button variant="outline" size="lg" onClick={reset}>
             Cancel
           </Button>
         </div>
@@ -157,7 +155,8 @@ export function DataPurchaseFlow({
     );
   }
 
-  if (step === "confirm" && plan) {
+  // From sm up the confirm step stays an in-page step, as it has always been.
+  if (isDesktop && step === "confirm" && plan) {
     if (plan.price > walletBalance) {
       return (
         <InsufficientBalance
@@ -168,81 +167,79 @@ export function DataPurchaseFlow({
       );
     }
 
-    const balanceAfter = walletBalance - plan.price;
     return (
-      <div className="space-y-5 rounded-xl border bg-card p-5 sm:p-6">
+      <div className={cn("space-y-5", screenPanelClass)}>
         <button
           onClick={() => setStep("form")}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+          className="flex min-h-11 items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="size-4" />
           Edit details
         </button>
 
-        <div className="space-y-3 rounded-lg border p-4">
-          <Row label="Network" value="MTN" />
-          <Row label="Phone number" value={formatPhoneNumber(phoneNumber)} />
-          <Row label="Data plan" value={`${plan.size} · ${plan.validityLabel}`} />
+        <div className="space-y-3">
+          <Row label="To" value={formatPhoneNumber(phoneNumber)} />
+          <Row label="Plan" value={`${plan.size} · ${plan.validityLabel}`} />
           <Row label="Amount" value={formatNaira(plan.price)} />
-          <Row label="Wallet balance" value={formatNaira(walletBalance)} />
-          <div className="flex justify-between border-t pt-3 text-sm">
-            <span className="text-muted-foreground">Balance after purchase</span>
-            <span className="font-semibold">{formatNaira(balanceAfter)}</span>
-          </div>
         </div>
 
-        <div className="flex items-start gap-2 rounded-lg bg-info/5 p-3 text-xs text-muted-foreground">
-          <Info className="mt-0.5 size-3.5 shrink-0 text-info" />
-          Your wallet is debited immediately. Delivery is confirmed by the network shortly after.
-        </div>
-
-        <div className="space-y-1.5 rounded-lg border border-dashed p-3">
-          <Label htmlFor="outcome" className="text-xs text-muted-foreground">
-            Preview result (demo only)
-          </Label>
-          <Select value={outcome} onValueChange={(v) => setOutcome(v as Outcome)}>
-            <SelectTrigger id="outcome" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="success">Successful</SelectItem>
-              <SelectItem value="failed">Failed</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        {outcomeField}
 
         <Button className="w-full" size="lg" onClick={handleConfirm}>
-          Confirm Purchase
+          Pay {formatNaira(plan.price)}
         </Button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-5 rounded-xl border bg-card p-5 sm:p-6">
-      <div className="space-y-1.5">
-        <Label htmlFor="phoneNumber">MTN phone number</Label>
-        <Input
-          id="phoneNumber"
-          type="tel"
-          inputMode="numeric"
-          placeholder="080X XXX XXXX"
-          value={phoneNumber}
-          onChange={(e) => setPhoneNumber(e.target.value)}
-          aria-invalid={!!phoneError}
-        />
-        {phoneError ? <p className="text-xs text-destructive">{phoneError}</p> : null}
+    <>
+      <div className={cn("space-y-5", screenPanelClass)}>
+        <div className="space-y-1.5">
+          <Label htmlFor="phoneNumber">MTN phone number</Label>
+          <Input
+            id="phoneNumber"
+            type="tel"
+            inputMode="numeric"
+            placeholder="080X XXX XXXX"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            aria-invalid={!!phoneError}
+          />
+          {phoneError ? <p className="text-xs text-destructive">{phoneError}</p> : null}
+        </div>
+
+        <div className="space-y-2">
+          <Label>Data plan</Label>
+          <DataPlanGrid plans={plans} selectedId={plan?.id ?? null} onSelect={setPlan} />
+        </div>
+
+        <Button className="w-full" size="lg" onClick={handleContinue} disabled={!plan}>
+          Continue
+        </Button>
       </div>
 
-      <div className="space-y-2">
-        <Label>Select a data plan</Label>
-        <DataPlanGrid plans={plans} selectedId={plan?.id ?? null} onSelect={setPlan} />
-      </div>
-
-      <Button className="w-full" size="lg" onClick={handleContinue} disabled={!plan}>
-        Continue
-      </Button>
-    </div>
+      {!isDesktop && plan ? (
+        <PurchaseConfirmSheet
+          open={step === "confirm"}
+          onOpenChange={(open) => {
+            if (!open) setStep("form");
+          }}
+          title="Confirm data purchase"
+          amount={plan.price}
+          walletBalance={walletBalance}
+          rows={[
+            { label: "Data plan", value: `${plan.size} · ${plan.validityLabel}` },
+            { label: "Recipient", value: formatPhoneNumber(phoneNumber) },
+            { label: "Amount", value: formatNaira(plan.price) },
+          ]}
+          actionLabel={`Pay ${formatNaira(plan.price)}`}
+          onConfirm={handleConfirm}
+        >
+          <div className="mt-5">{outcomeField}</div>
+        </PurchaseConfirmSheet>
+      ) : null}
+    </>
   );
 }
 

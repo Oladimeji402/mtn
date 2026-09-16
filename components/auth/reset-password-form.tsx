@@ -36,7 +36,7 @@ export function ResetPasswordForm() {
       setSuccess(true);
       toast.success("Password changed");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      const message = err instanceof Error ? err.message : "Something went wrong";
       setSubmitError(message);
       toast.error(message);
     }
@@ -50,11 +50,9 @@ export function ResetPasswordForm() {
         </div>
         <div className="space-y-1">
           <p className="font-medium">Password changed</p>
-          <p className="text-sm text-muted-foreground">
-            Your password has been updated. You can now login with your new password.
-          </p>
+          <p className="text-sm text-muted-foreground">You can now login.</p>
         </div>
-        <Button className="w-full" asChild>
+        <Button className="h-12 w-full" asChild>
           <Link href="/login">Continue to login</Link>
         </Button>
       </div>
@@ -99,7 +97,7 @@ export function ResetPasswordForm() {
         ) : null}
       </div>
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
+      <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
         {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : null}
         Reset password
       </Button>

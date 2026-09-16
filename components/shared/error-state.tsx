@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 export function ErrorState({
   title = "Something went wrong",
-  description = "We couldn't load this right now. Please try again.",
+  description = "Couldn't load this. Try again.",
   onRetry,
   className,
 }: {
@@ -16,7 +16,7 @@ export function ErrorState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center gap-3 rounded-lg border border-destructive/20 bg-destructive/5 py-14 px-6 text-center",
+        "flex flex-col items-center justify-center gap-3 rounded-xl border py-10 px-6 text-center",
         className,
       )}
     >

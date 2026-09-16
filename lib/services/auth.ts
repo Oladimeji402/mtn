@@ -21,7 +21,7 @@ function mapAuthError(message: string): string {
     return "Incorrect email/username or password.";
   }
   if (/rate limit/i.test(message)) {
-    return "Too many attempts. Please wait a moment and try again.";
+    return "Too many attempts. Try again shortly.";
   }
   return message;
 }

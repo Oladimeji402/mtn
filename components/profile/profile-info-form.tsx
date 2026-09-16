@@ -36,7 +36,7 @@ export function ProfileInfoForm({ user }: { user: User }) {
       toast.success("Profile updated");
       reset(values);
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      setSubmitError(err instanceof Error ? err.message : "Something went wrong");
     }
   }
 
@@ -63,7 +63,7 @@ export function ProfileInfoForm({ user }: { user: User }) {
         <div className="space-y-1.5">
           <Label htmlFor="email">Email</Label>
           <Input id="email" type="email" value={user.email} disabled readOnly />
-          <p className="text-xs text-muted-foreground">Contact support to change your email.</p>
+          <p className="text-xs text-muted-foreground">Contact support to change it.</p>
         </div>
       </div>
       <div className="flex justify-end">

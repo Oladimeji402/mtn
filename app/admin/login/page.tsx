@@ -7,8 +7,8 @@ export const metadata: Metadata = { title: `Admin Login | ${APP_NAME}` };
 
 export default function AdminLoginPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4 py-12">
-      <div className="w-full max-w-sm space-y-6">
+    <div className="flex min-h-dvh flex-col bg-zinc-950 px-6 py-[max(3rem,env(safe-area-inset-top))] sm:items-center sm:justify-center sm:px-4 sm:py-12">
+      <div className="flex w-full flex-1 flex-col justify-center space-y-6 sm:max-w-[414px] sm:flex-none">
         <div className="flex flex-col items-center gap-2 text-center">
           <span className="flex size-11 items-center justify-center rounded-md bg-brand text-brand-foreground">
             <ShieldCheck className="size-5" />
@@ -19,7 +19,7 @@ export default function AdminLoginPage() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 sm:rounded-xl">
           <AdminLoginForm />
         </div>
       </div>

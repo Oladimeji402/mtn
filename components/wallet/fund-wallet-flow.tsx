@@ -15,6 +15,7 @@ import { MIN_FUNDING_AMOUNT, QUICK_FUND_AMOUNTS } from "@/lib/constants";
 import { formatNaira } from "@/lib/format";
 import { fundWalletSchema, type FundWalletValues } from "@/lib/validation";
 import { confirmWalletFundingAction, initiateWalletFundingAction } from "@/lib/actions/wallet";
+import { cn, screenPanelClass } from "@/lib/utils";
 
 declare global {
   interface Window {
@@ -62,7 +63,7 @@ export function FundWalletFlow({ currentBalance }: { currentBalance: number }) {
 
   async function handlePay() {
     if (!window.PaystackPop) {
-      setError("Payment is still loading. Please try again in a moment.");
+      setError("Payment is still loading.");
       return;
     }
     setError(null);
@@ -90,10 +91,10 @@ export function FundWalletFlow({ currentBalance }: { currentBalance: number }) {
               if (result.outcome === "successful") {
                 setNewBalance(result.newBalance ?? currentBalance + amount);
                 setStep("success");
-                toast.success("Wallet funded successfully");
+                toast.success("Wallet funded");
               } else if (result.outcome === "pending") {
                 setStep("delayed");
-                toast.message("Payment is still being confirmed");
+                toast.message("Confirming payment");
               } else {
                 setError(result.reason ?? null);
                 setStep("failed");
@@ -108,7 +109,7 @@ export function FundWalletFlow({ currentBalance }: { currentBalance: number }) {
       });
       handler.openIframe();
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Could not start payment. Please try again.";
+      const message = err instanceof Error ? err.message : "Could not start payment";
       setError(message);
       toast.error(message);
       setStep("confirm");
@@ -132,82 +133,71 @@ export function FundWalletFlow({ currentBalance }: { currentBalance: number }) {
       />
 
       {step === "processing" ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border bg-card px-6 py-16 text-center">
+        <div className={cn(screenPanelClass, "flex flex-col items-center justify-center gap-3 py-16 text-center")}>
           <Loader2 className="size-8 animate-spin text-muted-foreground" />
           <div className="space-y-1">
-            <p className="font-medium">Opening secure payment</p>
-            <p className="text-sm text-muted-foreground">Complete your payment in the Paystack window.</p>
+            <p className="font-medium">Opening payment</p>
           </div>
         </div>
       ) : step === "success" ? (
-        <div className="space-y-4 rounded-xl border bg-card px-6 py-10 text-center">
+        <div className={cn(screenPanelClass, "space-y-4 py-10 text-center")}>
           <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-success/10">
             <CircleCheckBig className="size-6 text-success" />
           </div>
           <div className="space-y-1">
-            <p className="text-lg font-medium">Wallet funded successfully</p>
-            <p className="text-sm text-muted-foreground">
-              {formatNaira(amount)} has been added to your wallet.
-            </p>
-          </div>
-          <div className="mx-auto w-fit rounded-lg bg-secondary px-4 py-2">
-            <p className="text-xs text-muted-foreground">New balance</p>
-            <p className="font-semibold">{formatNaira(newBalance)}</p>
+            <p className="text-lg font-medium">Wallet funded</p>
+            <p className="text-sm text-muted-foreground">{formatNaira(amount)} added.</p>
           </div>
           <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:justify-center">
-            <Button asChild>
-              <Link href="/dashboard">Back to Dashboard</Link>
+            <Button size="lg" asChild>
+              <Link href="/dashboard">Done</Link>
             </Button>
-            <Button variant="outline" onClick={reset}>
+            <Button variant="outline" size="lg" onClick={reset}>
               Fund again
             </Button>
           </div>
         </div>
       ) : step === "failed" ? (
-        <div className="space-y-4 rounded-xl border bg-card px-6 py-10 text-center">
+        <div className={cn(screenPanelClass, "space-y-4 py-10 text-center")}>
           <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-destructive/10">
             <XCircle className="size-6 text-destructive" />
           </div>
           <div className="space-y-1">
             <p className="text-lg font-medium">Payment failed</p>
-            <p className="text-sm text-muted-foreground">
-              We couldn&apos;t confirm your payment of {formatNaira(amount)}. Your wallet was not
-              charged.
-            </p>
+            <p className="text-sm text-muted-foreground">Nothing was charged.</p>
           </div>
           <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:justify-center">
-            <Button onClick={() => setStep("confirm")}>Try again</Button>
-            <Button variant="outline" onClick={reset}>
+            <Button size="lg" onClick={() => setStep("confirm")}>Try again</Button>
+            <Button variant="outline" size="lg" onClick={reset}>
               Cancel
             </Button>
           </div>
         </div>
       ) : step === "delayed" ? (
-        <div className="space-y-4 rounded-xl border bg-card px-6 py-10 text-center">
+        <div className={cn(screenPanelClass, "space-y-4 py-10 text-center")}>
           <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-warning/10">
             <Clock className="size-6 text-warning" />
           </div>
           <div className="space-y-1">
-            <p className="text-lg font-medium">Payment taking longer than usual</p>
+            <p className="text-lg font-medium">Payment pending</p>
             <p className="text-sm text-muted-foreground">
-              We&apos;re still confirming your payment of {formatNaira(amount)}. We&apos;ll notify
-              you and update your balance as soon as it clears.
+              {formatNaira(amount)} will show in your wallet shortly.
             </p>
           </div>
           <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:justify-center">
-            <Button asChild>
-              <Link href="/dashboard/wallet/history">View wallet history</Link>
+            <Button size="lg" asChild>
+              <Link href="/dashboard/wallet/history">Wallet history</Link>
             </Button>
-            <Button variant="outline" onClick={reset}>
+            <Button variant="outline" size="lg" onClick={reset}>
               Back
             </Button>
           </div>
         </div>
       ) : step === "confirm" ? (
-        <div className="space-y-5 rounded-xl border bg-card p-5 sm:p-6">
+        <div className={cn("space-y-5", screenPanelClass)}>
           <button
             onClick={() => setStep("form")}
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+            className="flex min-h-11 items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="size-4" />
             Edit amount
@@ -220,30 +210,20 @@ export function FundWalletFlow({ currentBalance }: { currentBalance: number }) {
             </div>
           ) : null}
 
-          <div className="space-y-3 rounded-lg border p-4">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Amount to fund</span>
-              <span className="font-medium">{formatNaira(amount)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Current balance</span>
-              <span className="font-medium">{formatNaira(currentBalance)}</span>
-            </div>
-            <div className="flex justify-between border-t pt-3 text-sm">
-              <span className="text-muted-foreground">Expected balance</span>
-              <span className="font-semibold">{formatNaira(currentBalance + amount)}</span>
-            </div>
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">You&apos;re adding</p>
+            <p className="text-3xl font-semibold tracking-tight">{formatNaira(amount)}</p>
           </div>
 
           <Button className="w-full" size="lg" onClick={handlePay} disabled={!scriptReady}>
             {!scriptReady ? <Loader2 className="size-4 animate-spin" /> : null}
-            Continue to Payment
+            Pay {formatNaira(amount)}
           </Button>
         </div>
       ) : (
         <form
           onSubmit={handleSubmit(onSubmitForm)}
-          className="space-y-5 rounded-xl border bg-card p-5 sm:p-6"
+          className={cn("space-y-5", screenPanelClass)}
           noValidate
         >
           <div className="space-y-2">
@@ -256,7 +236,7 @@ export function FundWalletFlow({ currentBalance }: { currentBalance: number }) {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="amount">Or enter a custom amount</Label>
+            <Label htmlFor="amount">Amount</Label>
             <div className="relative">
               <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">
                 ₦
@@ -278,7 +258,7 @@ export function FundWalletFlow({ currentBalance }: { currentBalance: number }) {
               </p>
             ) : (
               <p className="text-xs text-muted-foreground">
-                Minimum funding amount is {formatNaira(MIN_FUNDING_AMOUNT, false)}
+                Minimum {formatNaira(MIN_FUNDING_AMOUNT, false)}
               </p>
             )}
           </div>

@@ -59,9 +59,9 @@ export const signupSchema = z
     email: emailSchema,
     phone: nigerianPhoneSchema,
     password: passwordSchema,
-    confirmPassword: z.string().min(1, "Please confirm your password"),
+    confirmPassword: z.string().min(1, "Confirm your password"),
     agreeToTerms: z.boolean().refine((v) => v === true, {
-      message: "You must agree to the Terms & Conditions to continue",
+      message: "Agree to the Terms & Conditions",
     }),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -87,7 +87,7 @@ export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 export const resetPasswordSchema = z
   .object({
     password: passwordSchema,
-    confirmPassword: z.string().min(1, "Please confirm your password"),
+    confirmPassword: z.string().min(1, "Confirm your password"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",

@@ -54,7 +54,7 @@ export function AdminUsersList({ users: initialUsers }: { users: AdminUserListIt
       );
       toast.success(`@${pendingUser.username} ${nextStatus === "active" ? "enabled" : "disabled"}`);
     } catch {
-      toast.error("Something went wrong. Please try again.");
+      toast.error("Something went wrong");
     } finally {
       setLoading(false);
       setPendingUser(null);

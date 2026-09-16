@@ -26,7 +26,7 @@ export function DataPlanGrid({
   return (
     <div className="space-y-4">
       <Tabs value={category} onValueChange={(v) => setCategory(v as DataPlan["category"])}>
-        <TabsList>
+        <TabsList className="h-11 w-full">
           {categories.map((c) => (
             <TabsTrigger key={c.value} value={c.value as string}>
               {c.label}
@@ -44,9 +44,7 @@ export function DataPlanGrid({
           />
         ))}
       </div>
-      <p className="text-xs text-muted-foreground">
-        Prices and validity shown are estimates and may change based on live provider pricing.
-      </p>
+      <p className="text-xs text-muted-foreground">Prices may vary.</p>
     </div>
   );
 }

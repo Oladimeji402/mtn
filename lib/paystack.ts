@@ -89,7 +89,7 @@ export async function settlePaystackTransaction(reference: string): Promise<Sett
 
   if (tx.status !== "success" || !amountMatches) {
     const reason = !amountMatches
-      ? "Amount mismatch between recorded intent and Paystack response."
+      ? "Payment could not be verified."
       : tx.gateway_response || "Payment was not successful.";
 
     await admin
@@ -101,7 +101,7 @@ export async function settlePaystackTransaction(reference: string): Promise<Sett
       user_id: payload.user_id,
       type: "wallet_funding_failed",
       title: "Wallet funding failed",
-      message: `Your ₦${payload.amount.toLocaleString()} wallet funding attempt was not successful.`,
+      message: `₦${payload.amount.toLocaleString()} funding failed.`,
     });
 
     return { outcome: "failed", reason };
@@ -137,7 +137,7 @@ export async function settlePaystackTransaction(reference: string): Promise<Sett
     user_id: payload.user_id,
     type: "wallet_funded",
     title: "Wallet funded",
-    message: `₦${payload.amount.toLocaleString()} was added to your wallet. New balance: ₦${Number(wallet.balance).toLocaleString()}.`,
+    message: `₦${payload.amount.toLocaleString()} added to your wallet.`,
   });
 
   return { outcome: "successful", newBalance: wallet.balance };

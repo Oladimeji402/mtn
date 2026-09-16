@@ -14,7 +14,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TransactionStatusBadge } from "@/components/shared/status-badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { formatDateTime, formatNaira } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { cn, screenPadClass } from "@/lib/utils";
 import type { WalletTransaction, WalletTransactionType } from "@/types";
 
 const typeLabel: Record<WalletTransactionType, string> = {
@@ -43,15 +43,17 @@ export function WalletHistoryList({ history }: { history: WalletTransaction[] })
 
   return (
     <div className="space-y-4">
-      <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
-        <TabsList className="w-full justify-start overflow-x-auto sm:w-auto">
-          {filters.map((f) => (
-            <TabsTrigger key={f.value} value={f.value}>
-              {f.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+      <div className={screenPadClass}>
+        <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
+          <TabsList className="h-11 w-full justify-start overflow-x-auto sm:h-8 sm:w-auto">
+            {filters.map((f) => (
+              <TabsTrigger key={f.value} value={f.value}>
+                {f.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      </div>
 
       {filtered.length === 0 ? (
         <EmptyState icon={History} title="No wallet activity" description="Nothing matches this filter yet." />
@@ -101,9 +103,9 @@ export function WalletHistoryList({ history }: { history: WalletTransaction[] })
             </Table>
           </div>
 
-          <div className="space-y-2 sm:hidden">
+          <div className="divide-y border-y sm:hidden">
             {filtered.map((tx) => (
-              <div key={tx.id} className="rounded-lg border p-3.5">
+              <div key={tx.id} className="min-h-16 px-4 py-3.5">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 space-y-0.5">
                     <p className="text-sm font-medium">{typeLabel[tx.type]}</p>
@@ -121,7 +123,7 @@ export function WalletHistoryList({ history }: { history: WalletTransaction[] })
                     {formatNaira(tx.amount, false)}
                   </span>
                 </div>
-                <div className="mt-3 flex items-center justify-between">
+                <div className="mt-2 flex items-center justify-between">
                   <TransactionStatusBadge status={tx.status} />
                   <span className="text-xs text-muted-foreground">
                     {formatDateTime(tx.createdAt)}

@@ -35,7 +35,7 @@ export function ChangePasswordForm({ email }: { email: string }) {
       toast.success("Password changed");
       reset();
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      setSubmitError(err instanceof Error ? err.message : "Something went wrong");
     }
   }
 

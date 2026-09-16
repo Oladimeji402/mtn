@@ -19,7 +19,7 @@ export function AdminMobileNavSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="w-72 border-zinc-800 bg-zinc-950 p-0 text-zinc-100">
+      <SheetContent side="left" className="w-72 border-zinc-800 bg-zinc-950 p-0 pt-[env(safe-area-inset-top)] text-zinc-100">
         <SheetHeader className="border-b border-zinc-800">
           <SheetTitle className="flex items-center gap-2 text-zinc-100">
             <ShieldCheck className="size-4.5 text-brand" />

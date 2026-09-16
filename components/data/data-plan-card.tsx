@@ -17,7 +17,7 @@ export function DataPlanCard({
       type="button"
       onClick={onSelect}
       className={cn(
-        "relative flex flex-col items-start gap-1 rounded-lg border p-4 text-left transition-colors",
+        "relative flex min-h-[5.5rem] flex-col items-start gap-1 rounded-xl border p-4 text-left transition-colors",
         selected
           ? "border-primary bg-primary/5 ring-1 ring-primary"
           : "hover:border-foreground/30 hover:bg-secondary/40",

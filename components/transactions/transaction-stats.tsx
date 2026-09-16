@@ -25,7 +25,7 @@ export function TransactionStats({
   onSelect: (status: TransactionFilterValue) => void;
 }) {
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+    <div className="grid grid-cols-2 gap-px bg-border sm:grid-cols-4 sm:gap-2 sm:bg-transparent">
       {stats.map((stat) => {
         const count = transactions.filter((t) => t.status === stat.status).length;
         const isActive = active === stat.status;
@@ -35,7 +35,7 @@ export function TransactionStats({
             type="button"
             onClick={() => onSelect(isActive ? "all" : stat.status)}
             className={cn(
-              "flex flex-col items-center gap-1 rounded-xl border bg-card py-3.5 transition-colors",
+              "flex min-h-[4.5rem] flex-col items-center justify-center gap-1 bg-card py-3.5 transition-colors sm:min-h-0 sm:rounded-xl sm:border",
               isActive ? "border-foreground/30 bg-secondary/50" : "hover:bg-secondary/30",
             )}
           >

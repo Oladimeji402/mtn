@@ -9,8 +9,8 @@ export default async function TransactionsPage() {
   const transactions = await getTransactions();
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Transactions" description="All your airtime and data purchases." />
+    <div className="space-y-3 sm:space-y-6">
+      <PageHeader title="Transactions" />
       <TransactionList transactions={transactions} />
     </div>
   );

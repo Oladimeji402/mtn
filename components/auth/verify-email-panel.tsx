@@ -19,7 +19,7 @@ export function VerifyEmailPanel({
   const [resending, setResending] = React.useState(false);
   const [sent, setSent] = React.useState(false);
   const [error, setError] = React.useState<string | null>(
-    linkError ? "That link is invalid or has expired. Request a new one below." : null,
+    linkError ? "This link is invalid or has expired." : null,
   );
 
   React.useEffect(() => {
@@ -37,7 +37,7 @@ export function VerifyEmailPanel({
       setCountdown(RESEND_SECONDS);
       setSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't resend the email. Please try again.");
+      setError(err instanceof Error ? err.message : "Could not resend");
     } finally {
       setResending(false);
     }
@@ -50,13 +50,12 @@ export function VerifyEmailPanel({
       </div>
 
       <div className="space-y-1">
-        <p className="font-medium">Verify your email</p>
         <p className="text-sm text-muted-foreground">
-          We sent a verification link to{" "}
+          We sent a link to{" "}
           <span className="font-medium text-foreground">
-            {email ? maskEmail(email) : "your email address"}
+            {email ? maskEmail(email) : "your email"}
           </span>
-          . Click the link to activate your account, then come back and login.
+          .
         </p>
       </div>
 
@@ -74,17 +73,18 @@ export function VerifyEmailPanel({
 
       <Button
         variant="outline"
+        size="lg"
         className="w-full"
         disabled={!email || countdown > 0 || resending}
         onClick={handleResend}
       >
         {resending ? <Loader2 className="size-4 animate-spin" /> : null}
-        {countdown > 0 ? `Resend link in ${countdown}s` : "Resend verification link"}
+        {countdown > 0 ? `Resend in ${countdown}s` : "Resend link"}
       </Button>
 
       {!email ? (
         <p className="text-xs text-muted-foreground">
-          Came here directly? Sign up again to get a fresh verification link.
+          Sign up again to get a new link.
         </p>
       ) : null}
     </div>

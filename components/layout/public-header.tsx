@@ -16,7 +16,7 @@ export function PublicHeader() {
   const [open, setOpen] = React.useState(false);
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
+    <header className="sticky top-0 z-40 border-b bg-background/95 pt-[env(safe-area-inset-top)] backdrop-blur supports-backdrop-filter:bg-background/80">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Logo href="/landing" />
 
@@ -33,17 +33,17 @@ export function PublicHeader() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          <Button variant="ghost" asChild>
+          <Button variant="ghost" className="h-10 px-4" asChild>
             <Link href="/login">Login</Link>
           </Button>
-          <Button asChild>
+          <Button className="h-10 px-4" asChild>
             <Link href="/signup">Create Account</Link>
           </Button>
         </div>
 
         <button
           type="button"
-          className="flex size-9 items-center justify-center rounded-md border md:hidden"
+          className="flex size-10 items-center justify-center rounded-md border md:hidden"
           onClick={() => setOpen((v) => !v)}
           aria-label="Toggle menu"
           aria-expanded={open}
@@ -67,10 +67,10 @@ export function PublicHeader() {
             ))}
           </nav>
           <div className="mt-3 flex flex-col gap-2 border-t pt-3">
-            <Button variant="outline" asChild>
+            <Button variant="outline" size="lg" asChild>
               <Link href="/login">Login</Link>
             </Button>
-            <Button asChild>
+            <Button size="lg" asChild>
               <Link href="/signup">Create Account</Link>
             </Button>
           </div>

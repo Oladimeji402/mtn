@@ -14,7 +14,7 @@ export default async function LoginPage({
   const { redirectTo } = await searchParams;
 
   return (
-    <AuthCard title="Welcome back" description="Login to manage your wallet and purchases.">
+    <AuthCard title="Welcome back">
       <LoginForm redirectTo={redirectTo || "/dashboard"} />
     </AuthCard>
   );

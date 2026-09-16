@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function ResetPasswordPage() {
   return (
-    <AuthCard title="Set a new password" description="Choose a strong password for your account.">
+    <AuthCard title="Set a new password" description="Enter a new password.">
       <ResetPasswordForm />
     </AuthCard>
   );

@@ -9,8 +9,8 @@ export default async function BuyAirtimePage() {
   const wallet = await getWallet();
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Buy Airtime" description="Top up MTN airtime instantly from your wallet." />
+    <div className="space-y-3 sm:space-y-6">
+      <PageHeader title="Buy Airtime" />
       <AirtimePurchaseFlow walletBalance={wallet.balance} />
     </div>
   );

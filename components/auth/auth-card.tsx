@@ -19,10 +19,10 @@ export function AuthCard({
   footer?: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-secondary/30 px-4 py-10">
-      <div className="w-full max-w-sm space-y-4">
-        <div className="overflow-hidden rounded-2xl border shadow-sm">
-          <div className="bg-gradient-to-br from-brand to-amber-500 px-6 pb-7 pt-8 text-center">
+    <div className="flex min-h-dvh flex-col bg-card sm:items-center sm:justify-center sm:bg-secondary/30 sm:px-4 sm:py-10">
+      <div className="flex w-full flex-1 flex-col sm:max-w-[416px] sm:flex-none sm:space-y-4">
+        <div className="flex flex-1 flex-col sm:overflow-hidden sm:rounded-2xl sm:border sm:shadow-sm">
+          <div className="bg-gradient-to-br from-brand to-amber-500 px-6 pb-7 pt-[max(2rem,env(safe-area-inset-top))] text-center sm:pt-8">
             <span className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-white/95 text-lg font-bold text-foreground shadow-sm">
               B
             </span>
@@ -30,9 +30,9 @@ export function AuthCard({
               {APP_NAME}
             </p>
             <p className="mt-1 text-sm text-brand-foreground/80">
-              Buy MTN Airtime &amp; Data Easily
+              Buy MTN Airtime &amp; Data
             </p>
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            <div className="mt-4 hidden flex-wrap items-center justify-center gap-2 sm:flex">
               {badges.map((b) => (
                 <span
                   key={b.label}
@@ -45,7 +45,7 @@ export function AuthCard({
             </div>
           </div>
 
-          <div className="bg-card p-6 sm:p-8">
+          <div className="flex flex-1 flex-col bg-card px-6 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:p-8">
             <div className="mb-6 space-y-1.5">
               <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
               {description ? (
@@ -56,7 +56,9 @@ export function AuthCard({
           </div>
         </div>
         {footer ? (
-          <p className="text-center text-sm text-muted-foreground">{footer}</p>
+          <p className="px-6 pb-6 text-center text-sm text-muted-foreground sm:px-0 sm:pb-0">
+            {footer}
+          </p>
         ) : null}
       </div>
     </div>

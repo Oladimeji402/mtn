@@ -10,7 +10,7 @@ export default async function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Users" description="Monitor and manage customer accounts." />
+      <PageHeader title="Users" />
       <AdminUsersList users={users} />
     </div>
   );

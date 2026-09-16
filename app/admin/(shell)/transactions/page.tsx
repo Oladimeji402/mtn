@@ -10,7 +10,7 @@ export default async function AdminTransactionsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Transactions" description="All airtime and data purchases across users." />
+      <PageHeader title="Transactions" />
       <AdminTransactionList transactions={transactions} />
     </div>
   );

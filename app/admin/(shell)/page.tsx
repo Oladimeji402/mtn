@@ -26,10 +26,7 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Dashboard"
-        description="Development data — not real business figures."
-      />
+      <PageHeader title="Dashboard" />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         <AdminStatCard label="Total users" value={String(stats.totalUsers)} icon={Users} />

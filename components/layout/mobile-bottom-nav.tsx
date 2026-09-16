@@ -8,19 +8,30 @@ import { cn } from "@/lib/utils";
 export function MobileBottomNav() {
   const pathname = usePathname();
 
+  // Routes that live "under" the More tab
+  const moreRoutes = [
+    "/dashboard/more",
+    "/dashboard/wallet",
+    "/dashboard/transactions",
+    "/dashboard/notifications",
+    "/dashboard/profile",
+    "/dashboard/support",
+  ];
+
   return (
-    <nav
-      className="fixed inset-x-0 bottom-0 z-30 flex items-stretch border-t bg-background/95 backdrop-blur pb-[env(safe-area-inset-bottom)] lg:hidden"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-    >
+    <nav className="fixed inset-x-0 bottom-0 z-30 flex items-stretch border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
       {mobilePrimaryNavItems.map((item) => {
         const active =
-          item.href === "/dashboard" ? pathname === item.href : pathname.startsWith(item.href);
+          item.href === "/dashboard/more"
+            ? moreRoutes.some((r) => pathname.startsWith(r))
+            : item.href === "/dashboard"
+              ? pathname === item.href
+              : pathname.startsWith(item.href);
         return (
           <Link
             key={item.href}
             href={item.href}
-            className="flex flex-1 flex-col items-center justify-center gap-1 py-2.5"
+            className="flex min-h-14 flex-1 flex-col items-center justify-center gap-1 py-2"
           >
             <span
               className={cn(

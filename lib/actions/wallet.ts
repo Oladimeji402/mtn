@@ -44,7 +44,7 @@ export async function initiateWalletFundingAction(amount: number): Promise<Initi
     event_reference: reference,
     payload: { user_id: user.id, amount, email: user.email },
   });
-  if (error) throw new Error("Could not start payment. Please try again.");
+  if (error) throw new Error("Could not start payment");
 
   return { reference, amountKobo: Math.round(amount * 100), email: user.email, publicKey };
 }
@@ -73,7 +73,7 @@ export async function confirmWalletFundingAction(reference: string): Promise<Con
 
   const payload = event?.payload as { user_id?: string } | undefined;
   if (!payload || payload.user_id !== user.id) {
-    throw new Error("This payment reference does not belong to your account.");
+    throw new Error("Invalid payment reference.");
   }
 
   const result = await settlePaystackTransaction(reference);

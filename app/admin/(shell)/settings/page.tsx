@@ -10,7 +10,7 @@ export default async function AdminSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Settings" description="Configure platform-wide purchase limits." />
+      <PageHeader title="Settings" />
       <AdminSettingsForm settings={settings} />
     </div>
   );

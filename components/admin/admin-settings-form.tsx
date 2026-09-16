@@ -34,7 +34,7 @@ export function AdminSettingsForm({ settings }: { settings: PlatformSettings }) 
       reset(saved);
       toast.success("Settings saved");
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      setSubmitError(err instanceof Error ? err.message : "Something went wrong");
     }
   }
 
@@ -61,8 +61,7 @@ export function AdminSettingsForm({ settings }: { settings: PlatformSettings }) 
           <p className="text-xs text-destructive">{errors.maxPurchaseDataGB.message}</p>
         ) : (
           <p className="text-xs text-muted-foreground">
-            No cumulative daily or monthly cap — customers can buy as many purchases at or
-            under this size as they want.
+            Max size for a single data purchase.
           </p>
         )}
       </div>

@@ -8,10 +8,7 @@ export const metadata: Metadata = {
 
 export default function SignupPage() {
   return (
-    <AuthCard
-      title="Create your account"
-      description="Start funding your wallet and buying MTN airtime & data."
-    >
+    <AuthCard title="Create your account">
       <SignupForm />
     </AuthCard>
   );

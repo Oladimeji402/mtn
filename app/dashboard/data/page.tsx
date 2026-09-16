@@ -10,8 +10,8 @@ export default async function BuyDataPage() {
   const [plans, wallet] = await Promise.all([getDataPlans(), getWallet()]);
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Buy Data" description="Choose a plan and top up MTN data instantly." />
+    <div className="space-y-3 sm:space-y-6">
+      <PageHeader title="Buy Data" />
       <DataPurchaseFlow plans={plans} walletBalance={wallet.balance} />
     </div>
   );

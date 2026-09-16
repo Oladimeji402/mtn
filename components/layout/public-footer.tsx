@@ -10,7 +10,7 @@ export function PublicFooter() {
           <div className="space-y-3">
             <Logo href="/landing" />
             <p className="max-w-xs text-sm text-muted-foreground">
-              Buy MTN airtime and data from your wallet in seconds.
+              Buy MTN airtime and data.
             </p>
           </div>
 

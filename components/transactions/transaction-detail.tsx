@@ -6,15 +6,8 @@ import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/shared/copy-button";
 import { TransactionStatusBadge } from "@/components/shared/status-badge";
 import { formatDate, formatNaira, formatPhoneNumber, formatTime } from "@/lib/format";
+import { cn, screenPadClass, screenPanelClass } from "@/lib/utils";
 import type { Transaction } from "@/types";
-
-const statusMessages: Record<Transaction["status"], string> = {
-  pending: "Your purchase is waiting to be processed.",
-  processing: "Your purchase is being processed by the network.",
-  successful: "This purchase was delivered successfully.",
-  failed: "This purchase could not be completed. You were not charged.",
-  refunded: "This purchase failed and the amount was refunded to your wallet.",
-};
 
 export function TransactionDetail({ transaction }: { transaction: Transaction }) {
   function handleDownload() {
@@ -38,18 +31,20 @@ export function TransactionDetail({ transaction }: { transaction: Transaction })
     }
     try {
       await navigator.clipboard.writeText(summary);
-      toast.success("Receipt details copied to clipboard");
+      toast.success("Copied");
     } catch {
-      toast.error("Couldn't share. Please try again.");
+      toast.error("Could not share");
     }
   }
 
   return (
     <div className="space-y-5">
-      <div className="rounded-xl border bg-card p-5 sm:p-6">
+      <div className={cn(screenPanelClass)}>
         <div className="flex flex-col items-start justify-between gap-4 border-b pb-5 sm:flex-row sm:items-center">
           <div>
-            <p className="text-sm text-muted-foreground">Amount</p>
+            <p className="text-sm text-muted-foreground">
+              {transaction.type === "airtime" ? "Airtime" : "Data"}
+            </p>
             <p className="text-2xl font-semibold tracking-tight">
               {formatNaira(transaction.amount)}
             </p>
@@ -57,34 +52,22 @@ export function TransactionDetail({ transaction }: { transaction: Transaction })
           <TransactionStatusBadge status={transaction.status} className="text-sm" />
         </div>
 
-        <p className="border-b py-4 text-sm text-muted-foreground">
-          {transaction.statusMessage ?? statusMessages[transaction.status]}
-        </p>
-
         <dl className="divide-y">
+          <DetailRow label="To">{formatPhoneNumber(transaction.phoneNumber)}</DetailRow>
+          {transaction.dataPlan ? (
+            <DetailRow label="Plan">
+              {transaction.dataPlan.size} · {transaction.dataPlan.validityLabel}
+            </DetailRow>
+          ) : null}
+          <DetailRow label="When">
+            {formatDate(transaction.createdAt)} · {formatTime(transaction.createdAt)}
+          </DetailRow>
           <DetailRow label="Reference">
             <span className="flex items-center gap-1 font-mono text-sm">
               {transaction.reference}
               <CopyButton value={transaction.reference} label="" />
             </span>
           </DetailRow>
-          <DetailRow label="Type">
-            {transaction.type === "airtime" ? "Airtime" : "Data"}
-          </DetailRow>
-          <DetailRow label="Network">{transaction.network}</DetailRow>
-          <DetailRow label="Phone number">{formatPhoneNumber(transaction.phoneNumber)}</DetailRow>
-          {transaction.dataPlan ? (
-            <DetailRow label="Data plan">
-              {transaction.dataPlan.size} · {transaction.dataPlan.validityLabel}
-            </DetailRow>
-          ) : null}
-          <DetailRow label="Date">{formatDate(transaction.createdAt)}</DetailRow>
-          <DetailRow label="Time">{formatTime(transaction.createdAt)}</DetailRow>
-          {transaction.providerReference ? (
-            <DetailRow label="Provider reference">
-              <span className="font-mono text-sm">{transaction.providerReference}</span>
-            </DetailRow>
-          ) : null}
           {transaction.failureReason ? (
             <DetailRow label="Note">
               <span className="text-destructive">{transaction.failureReason}</span>
@@ -93,14 +76,14 @@ export function TransactionDetail({ transaction }: { transaction: Transaction })
         </dl>
       </div>
 
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <Button variant="outline" className="flex-1" onClick={handleDownload}>
+      <div className={`flex flex-col gap-2 ${screenPadClass} sm:flex-row`}>
+        <Button variant="outline" size="lg" className="flex-1" onClick={handleDownload}>
           <Download className="size-4" />
-          Download Receipt
+          Download
         </Button>
-        <Button variant="outline" className="flex-1" onClick={handleShare}>
+        <Button variant="outline" size="lg" className="flex-1" onClick={handleShare}>
           <Share2 className="size-4" />
-          Share Receipt
+          Share
         </Button>
       </div>
     </div>

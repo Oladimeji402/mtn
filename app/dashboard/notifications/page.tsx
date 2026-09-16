@@ -9,8 +9,8 @@ export default async function NotificationsPage() {
   const notifications = await getNotifications();
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Notifications" description="Updates about your wallet and purchases." />
+    <div className="space-y-3 sm:space-y-6">
+      <PageHeader title="Notifications" />
       <NotificationList notifications={notifications} />
     </div>
   );

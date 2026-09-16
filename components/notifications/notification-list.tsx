@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { formatRelativeTime } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { cn, screenPadClass } from "@/lib/utils";
 import { markNotificationReadAction } from "@/lib/actions/notifications";
 import type { Notification, NotificationType } from "@/types";
 
@@ -42,7 +42,7 @@ export function NotificationList({ notifications }: { notifications: Notificatio
       await markNotificationReadAction(id);
     } catch {
       setItems((prev) => prev.map((n) => (n.id === id ? { ...n, read: wasRead } : n)));
-      toast.error("Couldn't mark as read. Please try again.");
+      toast.error("Could not update");
     }
   }
 
@@ -51,10 +51,10 @@ export function NotificationList({ notifications }: { notifications: Notificatio
     setItems((prev) => prev.map((n) => ({ ...n, read: true })));
     try {
       await Promise.all(unread.map((id) => markNotificationReadAction(id)));
-      toast.success("All notifications marked as read");
+      toast.success("Marked as read");
     } catch {
       setItems((prev) => prev.map((n) => (unread.includes(n.id) ? { ...n, read: false } : n)));
-      toast.error("Couldn't mark all as read. Please try again.");
+      toast.error("Could not update");
     }
   }
 
@@ -63,23 +63,24 @@ export function NotificationList({ notifications }: { notifications: Notificatio
       <EmptyState
         icon={Bell}
         title="No notifications"
-        description="We'll let you know when something happens on your account."
+        description="You're all caught up."
+        className="mx-4 sm:mx-0"
       />
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {unreadCount > 0 ? (
-        <div className="flex justify-end">
-          <Button variant="ghost" size="sm" onClick={handleMarkAllRead} className="gap-1.5 text-xs">
+        <div className={cn("flex justify-end", screenPadClass)}>
+          <Button variant="ghost" className="h-11 gap-1.5 text-sm sm:h-7 sm:text-xs" onClick={handleMarkAllRead}>
             <CheckCheck className="size-3.5" />
             Mark all as read
           </Button>
         </div>
       ) : null}
 
-      <div className="space-y-2">
+      <div className="divide-y border-y sm:space-y-2 sm:divide-y-0 sm:border-0">
         {items.map((n) => {
           const config = notificationIcon[n.type];
           const Icon = config.icon;
@@ -88,7 +89,7 @@ export function NotificationList({ notifications }: { notifications: Notificatio
               key={n.id}
               onClick={() => handleMarkRead(n.id)}
               className={cn(
-                "flex w-full items-start gap-3 rounded-lg border p-3.5 text-left transition-colors",
+                "flex min-h-16 w-full items-start gap-3 px-4 py-4 text-left transition-colors active:bg-secondary/50 sm:rounded-xl sm:border sm:p-4",
                 !n.read && "bg-secondary/40",
               )}
             >

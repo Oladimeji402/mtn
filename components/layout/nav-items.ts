@@ -2,6 +2,7 @@ import {
   Bell,
   LayoutDashboard,
   LifeBuoy,
+  MoreHorizontal,
   Receipt,
   Smartphone,
   User,
@@ -22,7 +23,7 @@ export const dashboardNavItems = [
 
 export const mobilePrimaryNavItems = [
   { href: "/dashboard", label: "Home", icon: LayoutDashboard },
-  { href: "/dashboard/wallet", label: "Wallet", icon: Wallet },
   { href: "/dashboard/airtime", label: "Airtime", icon: Smartphone },
   { href: "/dashboard/data", label: "Data", icon: Wifi },
+  { href: "/dashboard/more", label: "More", icon: MoreHorizontal },
 ];

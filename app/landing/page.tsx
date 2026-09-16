@@ -8,6 +8,7 @@ import {
   Bell,
   BarChart3,
   CircleCheckBig,
+  Wifi,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatNaira } from "@/lib/format";
@@ -15,67 +16,67 @@ import { formatNaira } from "@/lib/format";
 const steps = [
   {
     title: "Create your account",
-    description: "Sign up with a username, email and password in under a minute.",
+    description: "Sign up with email.",
   },
   {
     title: "Fund your wallet",
-    description: "Add money to your wallet securely, then use it whenever you need to.",
+    description: "Pay with card.",
   },
   {
     title: "Buy airtime or data",
-    description: "Pick an amount or a data plan for any MTN number and confirm.",
+    description: "For any MTN number.",
   },
   {
-    title: "Get delivered instantly",
-    description: "Track the exact status of your purchase from processing to delivered.",
+    title: "Get it delivered",
+    description: "Track until it arrives.",
   },
 ];
 
 const benefits = [
   {
     icon: Wallet,
-    title: "One wallet, always ready",
-    description: "Fund once and buy airtime or data anytime without re-entering payment details.",
+    title: "One wallet",
+    description: "Fund once, buy anytime.",
   },
   {
     icon: Gauge,
-    title: "Clear transaction status",
-    description: "Every purchase shows pending, processing, successful or failed — never a guess.",
+    title: "Clear status",
+    description: "See each purchase through.",
   },
   {
     icon: BarChart3,
-    title: "Buy as much as you need",
-    description: "Each data purchase is capped at 5GB — buy as many as you need, no monthly ceiling.",
+    title: "MTN airtime & data",
+    description: "Recharge any MTN number anytime.",
   },
   {
     icon: Bell,
-    title: "Instant notifications",
-    description: "Get notified the moment a purchase or wallet funding completes.",
+    title: "Notifications",
+    description: "When a purchase completes.",
   },
 ];
 
 const trustPoints = [
-  "Your wallet balance is never changed on this device alone — every credit and debit is verified.",
-  "Every transaction gets a unique reference you can look up or share.",
-  "Payment, wallet funding, and delivery are tracked as separate, visible steps.",
+  "Every credit and debit is verified.",
+  "Every transaction has a unique reference.",
+  "Payment, funding, and delivery are tracked separately.",
 ];
 
 const faqs = [
   {
     q: "Which network does this support?",
-    a: "This platform currently supports MTN airtime and data purchases only.",
+    a: "MTN airtime and data only.",
   },
   {
     q: "How do I add money to my wallet?",
-    a: "From your dashboard, choose Fund Wallet, pick or enter an amount, and complete payment. Your balance updates once payment is confirmed.",
+    a: "Use Fund Wallet and complete payment. Your balance updates when confirmed.",
   },
   {
     q: "What happens if a purchase fails?",
-    a: "If a purchase can't be completed, any amount already deducted is refunded to your wallet and the transaction is marked failed or refunded.",
+    a: "Any deducted amount is refunded to your wallet.",
   },
   {
     q: "Can I see my past purchases?",
-    a: "Yes. Your wallet history and transaction history both show a full record with status and reference numbers.",
+    a: "Yes. Check wallet history and transactions.",
   },
 ];
 
@@ -89,11 +90,10 @@ export default function HomePage() {
               MTN Airtime &amp; Data
             </span>
             <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
-              Buy MTN Airtime &amp; Data Easily
+              Buy MTN Airtime &amp; Data
             </h1>
             <p className="max-w-lg text-base text-muted-foreground sm:text-lg">
-              Fund your wallet once, then top up airtime or data for any MTN number in a
-              few taps — with clear status at every step.
+              Fund your wallet, then buy airtime or data for any MTN number.
             </p>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button size="lg" asChild>
@@ -124,7 +124,7 @@ export default function HomePage() {
                 Buy Airtime
               </div>
               <div className="rounded-md border bg-background p-3 text-sm">
-                <Wallet className="mb-2 size-4 text-muted-foreground" />
+                <Wifi className="mb-2 size-4 text-muted-foreground" />
                 Buy Data
               </div>
             </div>
@@ -148,13 +148,9 @@ export default function HomePage() {
 
       <section id="how-it-works" className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20">
         <div className="mb-10 max-w-xl space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            How it works
-          </p>
           <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            Four steps to your first purchase
+            How it works
           </h2>
-          <p className="text-muted-foreground">No complicated setup — you&apos;re topped up in minutes.</p>
         </div>
         <ol className="space-y-8">
           {steps.map((step, i) => (
@@ -180,11 +176,8 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
           <div className="mb-10 max-w-xl space-y-2">
             <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-              Built for a simple, transparent purchase
+              What you get
             </h2>
-            <p className="text-muted-foreground">
-              Everything about your wallet and purchases is visible and easy to follow.
-            </p>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {benefits.map((b) => (
@@ -207,12 +200,10 @@ export default function HomePage() {
               <ShieldCheck className="size-5" />
             </div>
             <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-              Built with trust and clarity in mind
+              Secure and transparent
             </h2>
             <p className="text-muted-foreground">
-              Because this platform handles your money, every step — payment, wallet
-              funding, and delivery — is shown separately so you always know what
-              stage your transaction is at.
+              Every payment, funding, and delivery step is tracked.
             </p>
           </div>
           <ul className="space-y-4">
@@ -230,7 +221,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20">
           <div className="mb-10 space-y-2 text-center">
             <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-              Frequently asked questions
+              FAQ
             </h2>
           </div>
           <div className="divide-y rounded-lg border bg-card">
@@ -252,7 +243,7 @@ export default function HomePage() {
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
         <div className="flex flex-col items-center gap-6 rounded-2xl bg-gradient-to-br from-brand to-amber-500 px-6 py-14 text-center">
           <h2 className="max-w-md text-2xl font-semibold tracking-tight text-brand-foreground sm:text-3xl">
-            Fund your wallet and make your first purchase today
+            Fund your wallet and buy today
           </h2>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button size="lg" variant="secondary" asChild>

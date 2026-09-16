@@ -21,11 +21,11 @@ export function AdminHeader({
   onOpenMobileNav: () => void;
 }) {
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-background px-4 sm:px-6">
+    <header className="sticky top-0 z-30 flex h-[calc(3.5rem+env(safe-area-inset-top))] items-center gap-3 border-b bg-background px-4 pt-[env(safe-area-inset-top)] sm:h-16 sm:px-6 sm:pt-0">
       <button
         type="button"
         onClick={onOpenMobileNav}
-        className="flex size-9 items-center justify-center rounded-md border lg:hidden"
+        className="flex size-11 items-center justify-center rounded-md border lg:hidden"
         aria-label="Open menu"
       >
         <Menu className="size-4.5" />

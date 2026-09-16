@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: APP_NAME,
     short_name: APP_NAME,
-    description: "Buy MTN airtime and data in seconds, from your wallet.",
+    description: "Buy MTN airtime and data.",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",

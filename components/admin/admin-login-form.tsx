@@ -34,14 +34,14 @@ export function AdminLoginForm() {
       router.push("/admin");
       router.refresh();
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      const message = err instanceof Error ? err.message : "Something went wrong";
       setSubmitError(message);
       toast.error(message);
     }
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+    <form onSubmit={handleSubmit(onSubmit)} className="w-full space-y-4 sm:mx-auto sm:w-[350px]" noValidate>
       {submitError ? (
         <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
           <AlertCircle className="mt-0.5 size-4 shrink-0" />
@@ -59,7 +59,7 @@ export function AdminLoginForm() {
           autoComplete="username"
           disabled={isSubmitting}
           aria-invalid={!!errors.identifier}
-          className="border-zinc-700 bg-zinc-900 text-zinc-100 placeholder:text-zinc-500"
+          className="h-12 border-zinc-700 bg-zinc-900 text-zinc-100 placeholder:text-zinc-500"
           {...register("identifier")}
         />
         {errors.identifier ? (
@@ -76,7 +76,7 @@ export function AdminLoginForm() {
           autoComplete="current-password"
           disabled={isSubmitting}
           aria-invalid={!!errors.password}
-          className="border-zinc-700 bg-zinc-900 text-zinc-100 placeholder:text-zinc-500"
+          className="h-12 border-zinc-700 bg-zinc-900 text-zinc-100 placeholder:text-zinc-500"
           {...register("password")}
         />
         {errors.password ? (
@@ -84,9 +84,9 @@ export function AdminLoginForm() {
         ) : null}
       </div>
 
-      <Button type="submit" className="w-full bg-brand text-brand-foreground hover:bg-brand/90" disabled={isSubmitting}>
+      <Button type="submit" className="h-12 w-full bg-brand text-base text-brand-foreground hover:bg-brand/90" disabled={isSubmitting}>
         {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : null}
-        Login to Admin
+        Login
       </Button>
     </form>
   );

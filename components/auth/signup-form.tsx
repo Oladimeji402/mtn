@@ -44,17 +44,17 @@ export function SignupForm() {
     setSubmitError(null);
     try {
       await signUp(values);
-      toast.success("Account created — check your email to verify.");
+      toast.success("Check your email to verify");
       router.push(`/verify-email?email=${encodeURIComponent(values.email)}`);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      const message = err instanceof Error ? err.message : "Something went wrong";
       setSubmitError(message);
       toast.error(message);
     }
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+    <form onSubmit={handleSubmit(onSubmit)} className="w-full space-y-4 sm:mx-auto sm:w-[350px]" noValidate>
       {submitError ? (
         <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
           <AlertCircle className="mt-0.5 size-4 shrink-0" />
@@ -71,6 +71,7 @@ export function SignupForm() {
           disabled={isSubmitting}
           aria-invalid={!!errors.username}
           aria-describedby={errors.username ? "username-error" : undefined}
+          className="h-12"
           {...register("username")}
         />
         {errors.username ? (
@@ -90,6 +91,7 @@ export function SignupForm() {
           disabled={isSubmitting}
           aria-invalid={!!errors.email}
           aria-describedby={errors.email ? "email-error" : undefined}
+          className="h-12"
           {...register("email")}
         />
         {errors.email ? (
@@ -110,6 +112,7 @@ export function SignupForm() {
           disabled={isSubmitting}
           aria-invalid={!!errors.phone}
           aria-describedby={errors.phone ? "phone-error" : undefined}
+          className="h-12"
           {...register("phone")}
         />
         {errors.phone ? (
@@ -127,6 +130,7 @@ export function SignupForm() {
           disabled={isSubmitting}
           aria-invalid={!!errors.password}
           aria-describedby="password-strength"
+          className="h-12"
           {...register("password")}
         />
         <div id="password-strength">
@@ -142,6 +146,7 @@ export function SignupForm() {
           disabled={isSubmitting}
           aria-invalid={!!errors.confirmPassword}
           aria-describedby={errors.confirmPassword ? "confirm-password-error" : undefined}
+          className="h-12"
           {...register("confirmPassword")}
         />
         {errors.confirmPassword ? (
@@ -176,7 +181,7 @@ export function SignupForm() {
         ) : null}
       </div>
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
+      <Button type="submit" className="h-12 w-full text-base" disabled={isSubmitting}>
         {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : null}
         Create Account
       </Button>

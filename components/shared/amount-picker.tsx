@@ -22,7 +22,7 @@ export function QuickAmountPicker({
           variant="outline"
           onClick={() => onSelect(amount)}
           className={cn(
-            "h-11 font-medium",
+            "h-12 font-medium",
             selected === amount &&
               "border-primary bg-primary/10 text-foreground ring-1 ring-primary",
           )}

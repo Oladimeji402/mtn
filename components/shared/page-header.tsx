@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn, screenPadClass } from "@/lib/utils";
 
 export function PageHeader({
   title,
@@ -15,6 +15,7 @@ export function PageHeader({
     <div
       className={cn(
         "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between",
+        screenPadClass,
         className,
       )}
     >

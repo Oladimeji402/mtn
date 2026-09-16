@@ -18,16 +18,21 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: `${APP_NAME} — Buy MTN Airtime & Data Easily`,
+    default: `${APP_NAME} — MTN Airtime & Data`,
     template: `%s | ${APP_NAME}`,
   },
   description:
-    "Fund your wallet and buy MTN airtime and data in seconds. Fast, transparent, and reliable.",
+    "Buy MTN airtime and data.",
   appleWebApp: { capable: true, statusBarStyle: "default", title: APP_NAME },
 };
 
 export const viewport: Viewport = {
   themeColor: "#ffcb05",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -39,7 +44,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <TooltipProvider delayDuration={200}>
           {children}
-          <Toaster position="top-center" />
+          <Toaster position="top-center" offset={{ top: "max(12px, env(safe-area-inset-top))" }} />
           <InstallPrompt />
         </TooltipProvider>
       </body>

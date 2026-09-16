@@ -61,7 +61,7 @@ export async function submitDataPurchase(input: SubmitDataInput): Promise<Transa
     amount: plan.price,
     dataPlan: { id: plan.id, size: plan.size, validityLabel: plan.validityLabel },
     status: "processing",
-    statusMessage: "Your MTN data purchase is being processed.",
+    statusMessage: "Data purchase is being processed.",
     walletBalanceBefore: input.walletBalanceBefore,
     walletBalanceAfter: input.walletBalanceBefore - plan.price,
     createdAt: now,
