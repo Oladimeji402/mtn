@@ -4,17 +4,11 @@ import * as React from "react";
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { ArrowLeft, CircleCheckBig, Loader2, XCircle } from "lucide-react";
+import { AlertCircle, ArrowLeft, CircleCheckBig, Clock, Loader2, XCircle } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { QuickAmountPicker } from "@/components/shared/amount-picker";
 import { InsufficientBalance } from "@/components/shared/insufficient-balance";
 import { PhoneFavorites } from "@/components/shared/phone-favorites";
@@ -23,19 +17,18 @@ import { useIsDesktop } from "@/hooks/use-is-desktop";
 import { MAX_AIRTIME_AMOUNT, MIN_AIRTIME_AMOUNT, QUICK_AIRTIME_AMOUNTS } from "@/lib/constants";
 import { formatNaira, formatPhoneNumber } from "@/lib/format";
 import { buyAirtimeSchema, type BuyAirtimeValues } from "@/lib/validation";
-import { submitAirtimePurchase } from "@/lib/services/purchase";
+import { purchaseAirtimeAction } from "@/lib/actions/purchase";
 import { cn, screenPanelClass } from "@/lib/utils";
 import type { Transaction } from "@/types";
 
-type Step = "form" | "confirm" | "processing" | "success" | "failed";
-type Outcome = "success" | "failed";
+type Step = "form" | "confirm" | "processing" | "success" | "pending" | "failed";
 
 export function AirtimePurchaseFlow({ walletBalance }: { walletBalance: number }) {
   const isDesktop = useIsDesktop();
   const [step, setStep] = React.useState<Step>("form");
-  const [outcome, setOutcome] = React.useState<Outcome>("success");
   const [values, setValues] = React.useState<BuyAirtimeValues | null>(null);
   const [result, setResult] = React.useState<Transaction | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
 
   const {
     register,
@@ -59,17 +52,24 @@ export function AirtimePurchaseFlow({ walletBalance }: { walletBalance: number }
   async function handleConfirm() {
     if (!values) return;
     setStep("processing");
-    if (outcome === "success") {
-      const res = await submitAirtimePurchase({
+    setError(null);
+    try {
+      const res = await purchaseAirtimeAction({
         phoneNumber: values.phoneNumber,
         amount: values.amount,
-        walletBalanceBefore: walletBalance,
       });
       setResult(res);
-      setStep("success");
-    } else {
-      await new Promise((r) => setTimeout(r, 1500));
-      setStep("failed");
+      if (res.status === "successful") {
+        setStep("success");
+      } else if (res.status === "processing") {
+        setStep("pending");
+      } else {
+        setStep("failed");
+        toast.error(res.failureReason ?? "Purchase failed");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not start purchase");
+      setStep("confirm");
     }
   }
 
@@ -79,26 +79,8 @@ export function AirtimePurchaseFlow({ walletBalance }: { walletBalance: number }
     setValue("amount", undefined as unknown as number);
     setValues(null);
     setResult(null);
-    setOutcome("success");
+    setError(null);
   }
-
-  // Rendered into whichever confirm container the breakpoint selects — never both.
-  const outcomeField = (
-    <div className="space-y-1.5 rounded-lg border border-dashed p-3">
-      <Label htmlFor="outcome" className="text-xs text-muted-foreground">
-        Preview result (demo only)
-      </Label>
-      <Select value={outcome} onValueChange={(v) => setOutcome(v as Outcome)}>
-        <SelectTrigger id="outcome" className="w-full">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="success">Successful</SelectItem>
-          <SelectItem value="failed">Failed</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
-  );
 
   if (step === "processing") {
     return (
@@ -135,7 +117,31 @@ export function AirtimePurchaseFlow({ walletBalance }: { walletBalance: number }
     );
   }
 
-  if (step === "failed" && values) {
+  if (step === "pending" && result) {
+    return (
+      <div className={cn(screenPanelClass, "space-y-4 py-10 text-center")}>
+        <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-warning/10">
+          <Clock className="size-6 text-warning" />
+        </div>
+        <div className="space-y-1">
+          <p className="text-lg font-medium">Airtime is on its way</p>
+          <p className="text-sm text-muted-foreground">
+            {formatNaira(result.amount)} to {formatPhoneNumber(result.phoneNumber)} is still being delivered.
+          </p>
+        </div>
+        <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:justify-center">
+          <Button size="lg" asChild>
+            <Link href={`/dashboard/transactions/${result.id}`}>Check status</Link>
+          </Button>
+          <Button variant="outline" size="lg" onClick={reset}>
+            Done
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === "failed" && result) {
     return (
       <div className={cn(screenPanelClass, "space-y-4 py-10 text-center")}>
         <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-destructive/10">
@@ -143,13 +149,10 @@ export function AirtimePurchaseFlow({ walletBalance }: { walletBalance: number }
         </div>
         <div className="space-y-1">
           <p className="text-lg font-medium">Couldn&apos;t send airtime</p>
-          <p className="text-sm text-muted-foreground">Nothing was charged.</p>
+          <p className="text-sm text-muted-foreground">Your wallet was refunded.</p>
         </div>
         <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:justify-center">
-          <Button size="lg" onClick={() => setStep("confirm")}>Try again</Button>
-          <Button variant="outline" size="lg" onClick={reset}>
-            Cancel
-          </Button>
+          <Button size="lg" onClick={reset}>Try again</Button>
         </div>
       </div>
     );
@@ -177,12 +180,17 @@ export function AirtimePurchaseFlow({ walletBalance }: { walletBalance: number }
           Edit details
         </button>
 
+        {error ? (
+          <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+            <AlertCircle className="mt-0.5 size-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        ) : null}
+
         <div className="space-y-3">
           <Row label="To" value={formatPhoneNumber(values.phoneNumber)} />
           <Row label="Amount" value={formatNaira(values.amount)} />
         </div>
-
-        {outcomeField}
 
         <Button className="w-full" size="lg" onClick={handleConfirm}>
           Send {formatNaira(values.amount)}
@@ -280,7 +288,12 @@ export function AirtimePurchaseFlow({ walletBalance }: { walletBalance: number }
           actionLabel={`Pay ${formatNaira(values.amount)}`}
           onConfirm={handleConfirm}
         >
-          <div className="mt-5">{outcomeField}</div>
+          {error ? (
+            <div className="mt-5 flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+              <AlertCircle className="mt-0.5 size-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          ) : null}
         </PurchaseConfirmSheet>
       ) : null}
     </>

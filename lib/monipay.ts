@@ -2,16 +2,25 @@ import "server-only";
 import crypto from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-const PAYSTACK_API = "https://api.paystack.co";
+const MONIPAY_API = "https://api.monipay.ng";
 
 function secretKey() {
-  const key = process.env.PAYSTACK_SECRET_KEY;
-  if (!key) throw new Error("PAYSTACK_SECRET_KEY is not set.");
+  const key = process.env.MONIPAY_SECRET_KEY;
+  if (!key) throw new Error("MONIPAY_SECRET_KEY is not set.");
+  return key;
+}
+
+// Confirmed against the live API: /transaction/initialize rejects the secret key
+// ("Use public key for this endpoint") despite the integration spec saying either
+// key works. Verify and the webhook signature still use the secret key.
+function publicKey() {
+  const key = process.env.MONIPAY_PUBLIC_KEY;
+  if (!key) throw new Error("MONIPAY_PUBLIC_KEY is not set.");
   return key;
 }
 
 /** Constant-time comparison — a plain === on signatures is a timing side-channel. */
-export function verifyPaystackSignature(rawBody: string, signatureHeader: string | null): boolean {
+export function verifyMonipaySignature(rawBody: string, signatureHeader: string | null): boolean {
   if (!signatureHeader) return false;
   const expected = crypto.createHmac("sha512", secretKey()).update(rawBody).digest("hex");
   const expectedBuf = Buffer.from(expected, "hex");
@@ -20,26 +29,76 @@ export function verifyPaystackSignature(rawBody: string, signatureHeader: string
   return crypto.timingSafeEqual(expectedBuf, gotBuf);
 }
 
-interface PaystackVerifyResponse {
+interface MonipayInitializeResponse {
   status: boolean;
+  message?: string;
   data: {
-    status: "success" | "failed" | "abandoned" | "pending" | "queued" | "ongoing";
+    authorization_url: string;
+    access_code: string;
     reference: string;
-    amount: number; // kobo
-    currency: string;
-    gateway_response: string;
   };
 }
 
-async function verifyWithPaystack(reference: string) {
-  const res = await fetch(`${PAYSTACK_API}/transaction/verify/${encodeURIComponent(reference)}`, {
+/**
+ * Runs server-side (Server Action) so the call itself never touches the browser —
+ * the client only ever receives the resulting authorization_url and is redirected to
+ * Monipay's hosted checkout. Uses the public key, per the live API's own validation.
+ */
+export async function initializeMonipayTransaction(params: {
+  email: string;
+  amountKobo: number;
+  reference: string;
+  callbackUrl: string;
+}) {
+  const res = await fetch(`${MONIPAY_API}/transaction/initialize`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${publicKey()}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email: params.email,
+      amount: params.amountKobo,
+      reference: params.reference,
+      callback_url: params.callbackUrl,
+      currency: "NGN",
+    }),
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error(`Monipay initialize failed: HTTP ${res.status}`);
+  }
+  const json = (await res.json()) as MonipayInitializeResponse;
+  if (!json.status || !json.data?.authorization_url) {
+    throw new Error(json.message || "Monipay did not return a checkout URL.");
+  }
+  return json.data;
+}
+
+interface MonipayVerifyResponse {
+  status: boolean;
+  message?: string;
+  data: {
+    status: string; // "success" / "APPROVED" / "failed" / "pending" / ... — normalized below
+    reference: string;
+    amount: number; // kobo
+    gateway_response?: string;
+  };
+}
+
+const SUCCESS_STATUSES = new Set(["success", "approved"]);
+const PENDING_STATUSES = new Set(["pending", "queued", "ongoing", "processing"]);
+
+async function verifyWithMonipay(reference: string) {
+  const res = await fetch(`${MONIPAY_API}/transaction/verify/${encodeURIComponent(reference)}`, {
     headers: { Authorization: `Bearer ${secretKey()}` },
     cache: "no-store",
   });
   if (!res.ok) {
-    throw new Error(`Paystack verify request failed: HTTP ${res.status}`);
+    throw new Error(`Monipay verify request failed: HTTP ${res.status}`);
   }
-  const json = (await res.json()) as PaystackVerifyResponse;
+  const json = (await res.json()) as MonipayVerifyResponse;
   return json.data;
 }
 
@@ -52,20 +111,21 @@ export type SettleResult =
 /**
  * The single source of truth for "did this payment actually happen, and did we credit
  * it." Called from both the webhook (authoritative, works even if the user's browser
- * is closed) and the client-triggered confirm step (for fast UI feedback). Both paths
- * converge here so there is exactly one crediting code path to reason about.
+ * is closed) and the client-triggered confirm step after the redirect back from
+ * Monipay's hosted checkout. Both paths converge here so there is exactly one
+ * crediting code path to reason about.
  *
  * Idempotent by construction: payment_events.processed_at gates re-processing, and
  * fn_credit_wallet_from_payment's unique constraint on wallet_ledger.reference is the
  * hard backstop if this function is somehow entered twice concurrently.
  */
-export async function settlePaystackTransaction(reference: string): Promise<SettleResult> {
+export async function settleMonipayTransaction(reference: string): Promise<SettleResult> {
   const admin = createAdminClient();
 
   const { data: event, error: eventError } = await admin
     .from("payment_events")
     .select("*")
-    .eq("provider", "paystack")
+    .eq("provider", "monipay")
     .eq("event_reference", reference)
     .maybeSingle();
 
@@ -79,15 +139,16 @@ export async function settlePaystackTransaction(reference: string): Promise<Sett
   }
 
   const payload = event.payload as { user_id: string; amount: number; email: string };
-  const tx = await verifyWithPaystack(reference);
+  const tx = await verifyWithMonipay(reference);
+  const status = tx.status.toLowerCase();
 
-  if (tx.status === "pending" || tx.status === "queued" || tx.status === "ongoing") {
+  if (PENDING_STATUSES.has(status)) {
     return { outcome: "pending" };
   }
 
   const amountMatches = tx.amount === Math.round(payload.amount * 100);
 
-  if (tx.status !== "success" || !amountMatches) {
+  if (!SUCCESS_STATUSES.has(status) || !amountMatches) {
     const reason = !amountMatches
       ? "Payment could not be verified."
       : tx.gateway_response || "Payment was not successful.";
@@ -111,7 +172,7 @@ export async function settlePaystackTransaction(reference: string): Promise<Sett
     p_user_id: payload.user_id,
     p_amount: payload.amount,
     p_reference: reference,
-    p_description: "Wallet funding via Paystack",
+    p_description: "Wallet funding via Monipay",
   });
 
   if (creditError) {

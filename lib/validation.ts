@@ -141,9 +141,3 @@ export const adminLoginSchema = z.object({
 });
 
 export type AdminLoginValues = z.infer<typeof adminLoginSchema>;
-
-export const adminSettingsSchema = z.object({
-  maxPurchaseDataGB: z.coerce.number().min(0.5, "Must be at least 0.5GB").max(50),
-});
-
-export type AdminSettingsValues = z.infer<typeof adminSettingsSchema>;

@@ -1,5 +1,5 @@
 // Core domain types for the MTN Airtime & Data Vending Platform.
-// These types model the data contracts the future backend (Supabase + Paystack + VTU provider)
+// These types model the data contracts the future backend (Supabase + Monipay + VTU provider)
 // will eventually fulfil. The UI phase only consumes them via the mock service layer in lib/services.
 
 export type Network = "MTN";
@@ -118,7 +118,8 @@ export type NotificationType =
   | "wallet_funding_failed"
   | "daily_limit_warning"
   | "monthly_limit_warning"
-  | "security";
+  | "security"
+  | "vtu_balance_low";
 
 export interface Notification {
   id: string;
@@ -191,7 +192,5 @@ export interface AdminDashboardStats {
 }
 
 export interface PlatformSettings {
-  /** Hard per-purchase ceiling — there is no cumulative daily/monthly cap. */
-  maxPurchaseDataGB: number;
   minimumFundingAmount: number;
 }

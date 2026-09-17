@@ -4,12 +4,12 @@ import { History } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { FundWalletFlow } from "@/components/wallet/fund-wallet-flow";
-import { getWallet } from "@/lib/services/wallet";
+import { getWallet, getWalletHistory } from "@/lib/services/wallet";
 
 export const metadata: Metadata = { title: "Wallet" };
 
 export default async function WalletPage() {
-  const wallet = await getWallet();
+  const [wallet, history] = await Promise.all([getWallet(), getWalletHistory()]);
 
   return (
     <div className="space-y-3 sm:space-y-6">
@@ -24,7 +24,7 @@ export default async function WalletPage() {
           </Button>
         }
       />
-      <FundWalletFlow currentBalance={wallet.balance} />
+      <FundWalletFlow currentBalance={wallet.balance} recentHistory={history.slice(0, 5)} />
     </div>
   );
 }

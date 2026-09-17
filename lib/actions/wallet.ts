@@ -1,27 +1,37 @@
 "use server";
 
 import crypto from "crypto";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { settlePaystackTransaction } from "@/lib/paystack";
+import { initializeMonipayTransaction, settleMonipayTransaction } from "@/lib/monipay";
+import { assertNotRateLimited } from "@/lib/rate-limit";
 import { MAX_FUNDING_AMOUNT, MIN_FUNDING_AMOUNT } from "@/lib/constants";
 
 function generateReference() {
   return `FUND-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
 }
 
+/** Best-effort origin for building the callback_url — Server Actions have no `window`. */
+async function getOrigin() {
+  const h = await headers();
+  const origin = h.get("origin");
+  if (origin) return origin;
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  if (!host) throw new Error("Could not determine the app's URL for the payment callback.");
+  return `${proto}://${host}`;
+}
+
 export interface InitiateFundingResult {
-  reference: string;
-  amountKobo: number;
-  email: string;
-  publicKey: string;
+  authorizationUrl: string;
 }
 
 /**
  * Records the funding intent (who, how much, under what reference) BEFORE any money
- * moves. The Paystack Inline popup then runs entirely client-side against this
- * reference; settlePaystackTransaction looks the intent back up by reference so a
- * client can never credit an arbitrary user or amount by tampering with the popup.
+ * moves, then asks Monipay to open a hosted checkout for it. settleMonipayTransaction
+ * looks the intent back up by reference so a returning browser can never credit an
+ * arbitrary user or amount by tampering with the redirect.
  */
 export async function initiateWalletFundingAction(amount: number): Promise<InitiateFundingResult> {
   if (amount < MIN_FUNDING_AMOUNT || amount > MAX_FUNDING_AMOUNT) {
@@ -34,19 +44,28 @@ export async function initiateWalletFundingAction(amount: number): Promise<Initi
   } = await supabase.auth.getUser();
   if (!user?.email) throw new Error("Not authenticated");
 
-  const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
-  if (!publicKey) throw new Error("Payments are not configured yet.");
+  await assertNotRateLimited("wallet_funding_initiate", 5, 300);
 
   const reference = generateReference();
   const admin = createAdminClient();
   const { error } = await admin.from("payment_events").insert({
-    provider: "paystack",
+    provider: "monipay",
     event_reference: reference,
     payload: { user_id: user.id, amount, email: user.email },
   });
   if (error) throw new Error("Could not start payment");
 
-  return { reference, amountKobo: Math.round(amount * 100), email: user.email, publicKey };
+  const origin = await getOrigin();
+  const callbackUrl = `${origin}/dashboard/wallet?monipay_reference=${encodeURIComponent(reference)}`;
+
+  const { authorization_url } = await initializeMonipayTransaction({
+    email: user.email,
+    amountKobo: Math.round(amount * 100),
+    reference,
+    callbackUrl,
+  });
+
+  return { authorizationUrl: authorization_url };
 }
 
 export interface ConfirmFundingResult {
@@ -55,7 +74,7 @@ export interface ConfirmFundingResult {
   reason?: string;
 }
 
-/** Called right after the Paystack Inline popup reports success, for immediate UI feedback. */
+/** Called when the browser lands back on /dashboard/wallet after Monipay's checkout. */
 export async function confirmWalletFundingAction(reference: string): Promise<ConfirmFundingResult> {
   const supabase = await createClient();
   const {
@@ -67,7 +86,7 @@ export async function confirmWalletFundingAction(reference: string): Promise<Con
   const { data: event } = await admin
     .from("payment_events")
     .select("payload")
-    .eq("provider", "paystack")
+    .eq("provider", "monipay")
     .eq("event_reference", reference)
     .maybeSingle();
 
@@ -76,10 +95,18 @@ export async function confirmWalletFundingAction(reference: string): Promise<Con
     throw new Error("Invalid payment reference.");
   }
 
-  const result = await settlePaystackTransaction(reference);
+  const result = await settleMonipayTransaction(reference);
 
   if (result.outcome === "already_processed") {
-    return { outcome: result.priorOutcome === "successful" ? "successful" : "failed" };
+    // The webhook (which races this client-triggered confirm) already settled it —
+    // common, since it fires as soon as Monipay confirms the transfer, often before the
+    // browser even redirects back. Still fetch the real balance rather than omitting it:
+    // the UI would otherwise fall back to the pre-funding balance it was rendered with.
+    if (result.priorOutcome !== "successful") {
+      return { outcome: "failed" };
+    }
+    const { data: wallet } = await admin.from("wallets").select("balance").eq("user_id", user.id).single();
+    return { outcome: "successful", newBalance: wallet?.balance ?? undefined };
   }
   if (result.outcome === "successful") {
     return { outcome: "successful", newBalance: result.newBalance };

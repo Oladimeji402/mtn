@@ -44,7 +44,6 @@ export function DataPlanGrid({
           />
         ))}
       </div>
-      <p className="text-xs text-muted-foreground">Prices may vary.</p>
     </div>
   );
 }

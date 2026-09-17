@@ -69,13 +69,12 @@ export async function getPlatformSettings(): Promise<PlatformSettings> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("platform_settings")
-    .select("max_purchase_data_gb, minimum_funding_amount")
+    .select("minimum_funding_amount")
     .single();
 
   if (error || !data) throw new Error(error?.message ?? "Failed to load settings");
 
   return {
-    maxPurchaseDataGB: data.max_purchase_data_gb,
     minimumFundingAmount: data.minimum_funding_amount,
   };
 }
@@ -95,13 +94,12 @@ export async function updatePlatformSettings(settings: PlatformSettings): Promis
   const { data, error } = await admin
     .from("platform_settings")
     .update({
-      max_purchase_data_gb: settings.maxPurchaseDataGB,
       minimum_funding_amount: settings.minimumFundingAmount,
       updated_by: actor.id,
       updated_at: new Date().toISOString(),
     })
     .eq("id", true)
-    .select("max_purchase_data_gb, minimum_funding_amount")
+    .select("minimum_funding_amount")
     .single();
 
   if (error || !data) throw new Error(error?.message ?? "Failed to save settings");
@@ -115,7 +113,6 @@ export async function updatePlatformSettings(settings: PlatformSettings): Promis
   });
 
   return {
-    maxPurchaseDataGB: data.max_purchase_data_gb,
     minimumFundingAmount: data.minimum_funding_amount,
   };
 }

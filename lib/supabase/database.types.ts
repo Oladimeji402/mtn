@@ -26,7 +26,8 @@ export type NotificationTypeDb =
   | "wallet_funding_failed"
   | "daily_limit_warning"
   | "monthly_limit_warning"
-  | "security";
+  | "security"
+  | "vtu_balance_low";
 
 type Relationship = {
   foreignKeyName: string;
@@ -120,6 +121,7 @@ export interface Database {
         category: PlanCategory;
         popular: boolean;
         active: boolean;
+        vtu_variation_id: string | null;
       }>;
       notifications: Table<{
         id: string;
@@ -132,7 +134,6 @@ export interface Database {
       }>;
       platform_settings: Table<{
         id: boolean;
-        max_purchase_data_gb: number;
         minimum_funding_amount: number;
         updated_by: string | null;
         updated_at: string;
@@ -159,6 +160,12 @@ export interface Database {
         entity_id: string | null;
         metadata: Record<string, unknown> | null;
         created_at: string;
+      }>;
+      vtu_auth_state: Table<{
+        id: boolean;
+        token: string | null;
+        expires_at: string | null;
+        updated_at: string;
       }>;
     };
     Views: Record<string, never>;
@@ -206,6 +213,10 @@ export interface Database {
           daily_used_mb: number;
           monthly_used_mb: number;
         }[];
+      };
+      fn_check_rate_limit: {
+        Args: { p_action: string; p_max_attempts: number; p_window_seconds: number };
+        Returns: undefined;
       };
     };
     Enums: Record<string, never>;

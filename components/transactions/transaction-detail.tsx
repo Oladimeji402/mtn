@@ -1,15 +1,38 @@
 "use client";
 
-import { Download, Share2 } from "lucide-react";
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import { Download, Loader2, RefreshCw, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/shared/copy-button";
 import { TransactionStatusBadge } from "@/components/shared/status-badge";
 import { formatDate, formatNaira, formatPhoneNumber, formatTime } from "@/lib/format";
+import { requeryPurchaseAction } from "@/lib/actions/purchase";
 import { cn, screenPadClass, screenPanelClass } from "@/lib/utils";
 import type { Transaction } from "@/types";
 
 export function TransactionDetail({ transaction }: { transaction: Transaction }) {
+  const router = useRouter();
+  const [checking, setChecking] = React.useState(false);
+
+  async function handleCheckStatus() {
+    setChecking(true);
+    try {
+      const updated = await requeryPurchaseAction(transaction.id);
+      if (updated.status !== "processing") {
+        toast.success(`Status updated: ${updated.status}`);
+        router.refresh();
+      } else {
+        toast.message("Still processing — check back shortly");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not check status");
+    } finally {
+      setChecking(false);
+    }
+  }
+
   function handleDownload() {
     toast.success("Receipt downloaded", {
       description: `${transaction.reference}.pdf saved to your device.`,
@@ -75,6 +98,21 @@ export function TransactionDetail({ transaction }: { transaction: Transaction })
           ) : null}
         </dl>
       </div>
+
+      {transaction.status === "processing" ? (
+        <div className={screenPadClass}>
+          <Button
+            variant="outline"
+            size="lg"
+            className="w-full"
+            onClick={handleCheckStatus}
+            disabled={checking}
+          >
+            {checking ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+            Check status
+          </Button>
+        </div>
+      ) : null}
 
       <div className={`flex flex-col gap-2 ${screenPadClass} sm:flex-row`}>
         <Button variant="outline" size="lg" className="flex-1" onClick={handleDownload}>

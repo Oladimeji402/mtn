@@ -29,6 +29,7 @@ const notificationIcon: Record<NotificationType, { icon: LucideIcon; className: 
   daily_limit_warning: { icon: AlertTriangle, className: "bg-warning/10 text-warning" },
   monthly_limit_warning: { icon: AlertTriangle, className: "bg-warning/10 text-warning" },
   security: { icon: ShieldAlert, className: "bg-info/10 text-info" },
+  vtu_balance_low: { icon: AlertTriangle, className: "bg-warning/10 text-warning" },
 };
 
 export function NotificationList({ notifications }: { notifications: Notification[] }) {
