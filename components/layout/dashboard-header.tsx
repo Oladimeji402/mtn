@@ -25,7 +25,7 @@ export function DashboardHeader({
 
   return (
     <header
-      className="sticky top-0 z-30 flex h-[calc(3.5rem+env(safe-area-inset-top))] items-center gap-3 border-b border-transparent bg-gradient-to-br from-brand to-amber-500 px-4 pt-[env(safe-area-inset-top)] backdrop-blur sm:h-16 sm:border-border sm:bg-background/95 sm:bg-none sm:px-6 sm:pt-0"
+      className="fixed inset-x-0 top-0 z-40 flex h-[calc(3.5rem+env(safe-area-inset-top))] items-center gap-3 border-b border-transparent bg-gradient-to-br from-brand to-amber-500 px-4 pt-[env(safe-area-inset-top)] backdrop-blur sm:h-16 sm:border-border sm:bg-background/95 sm:bg-none sm:px-6 sm:pt-0 lg:sticky lg:left-auto lg:right-auto"
     >
       {/* Greeting — always visible on mobile, hidden on sm+ */}
       <p className="truncate text-base font-semibold text-brand-foreground sm:hidden">
