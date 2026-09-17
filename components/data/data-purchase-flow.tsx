@@ -217,8 +217,14 @@ export function DataPurchaseFlow({
         </div>
 
         <Button className="w-full" size="lg" onClick={handleContinue} disabled={!plan}>
-          Continue
+          {plan ? "Purchase" : "Select a data plan"}
         </Button>
+
+        <p className="text-center text-xs text-muted-foreground">
+          Check your balance by dialing *323*4#
+          <br />
+          Data shows as &quot;Data Transfer&quot; or &quot;Bonus&quot; on the USSD screen, not in SMS
+        </p>
       </div>
 
       {!isDesktop && plan ? (
