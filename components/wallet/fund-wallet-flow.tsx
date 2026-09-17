@@ -264,7 +264,7 @@ export function FundWalletFlow({ currentBalance }: { currentBalance: number }) {
           </div>
 
           <Button type="submit" className="w-full" size="lg">
-            Continue
+            Proceed to Payment
           </Button>
         </form>
       )}
