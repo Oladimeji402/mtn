@@ -17,6 +17,9 @@ import { logIn } from "@/lib/services/auth";
 export function LoginForm({ redirectTo = "/dashboard" }: { redirectTo?: string }) {
   const router = useRouter();
   const [submitError, setSubmitError] = React.useState<string | null>(null);
+  // Stays true through the redirect so the button keeps spinning instead of
+  // going idle while the dashboard's server data is still loading.
+  const [isRedirecting, setIsRedirecting] = React.useState(false);
 
   const {
     register,
@@ -27,13 +30,15 @@ export function LoginForm({ redirectTo = "/dashboard" }: { redirectTo?: string }
     defaultValues: { identifier: "", password: "" },
   });
 
+  const busy = isSubmitting || isRedirecting;
+
   async function onSubmit(values: LoginValues) {
     setSubmitError(null);
     try {
       await logIn(values);
       toast.success("Welcome back");
+      setIsRedirecting(true);
       router.push(redirectTo);
-      router.refresh();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong";
       setSubmitError(message);
@@ -56,7 +61,7 @@ export function LoginForm({ redirectTo = "/dashboard" }: { redirectTo?: string }
           id="identifier"
           placeholder="you@example.com"
           autoComplete="username"
-          disabled={isSubmitting}
+          disabled={busy}
           aria-invalid={!!errors.identifier}
           aria-describedby={errors.identifier ? "identifier-error" : undefined}
           className="h-12"
@@ -82,7 +87,7 @@ export function LoginForm({ redirectTo = "/dashboard" }: { redirectTo?: string }
         <PasswordInput
           id="password"
           autoComplete="current-password"
-          disabled={isSubmitting}
+          disabled={busy}
           aria-invalid={!!errors.password}
           aria-describedby={errors.password ? "password-error" : undefined}
           className="h-12"
@@ -95,8 +100,8 @@ export function LoginForm({ redirectTo = "/dashboard" }: { redirectTo?: string }
         ) : null}
       </div>
 
-      <Button type="submit" className="h-12 w-full text-base" disabled={isSubmitting}>
-        {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : null}
+      <Button type="submit" className="h-12 w-full text-base" disabled={busy}>
+        {busy ? <Loader2 className="size-4 animate-spin" /> : null}
         Login
       </Button>
 

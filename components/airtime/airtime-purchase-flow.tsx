@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { QuickAmountPicker } from "@/components/shared/amount-picker";
 import { InsufficientBalance } from "@/components/shared/insufficient-balance";
+import { PhoneFavorites } from "@/components/shared/phone-favorites";
 import { PurchaseConfirmSheet } from "@/components/shared/purchase-confirm-sheet";
 import { useIsDesktop } from "@/hooks/use-is-desktop";
 import { MAX_AIRTIME_AMOUNT, MIN_AIRTIME_AMOUNT, QUICK_AIRTIME_AMOUNTS } from "@/lib/constants";
@@ -48,6 +49,7 @@ export function AirtimePurchaseFlow({ walletBalance }: { walletBalance: number }
   });
 
   const watchedAmount = watch("amount");
+  const watchedPhone = watch("phoneNumber");
 
   function onSubmitForm(v: BuyAirtimeValues) {
     setValues(v);
@@ -208,6 +210,10 @@ export function AirtimePurchaseFlow({ walletBalance }: { walletBalance: number }
               {errors.phoneNumber.message}
             </p>
           ) : null}
+          <PhoneFavorites
+            phoneNumber={watchedPhone ?? ""}
+            onSelect={(v) => setValue("phoneNumber", v, { shouldValidate: true })}
+          />
         </div>
 
         <div className="space-y-2">

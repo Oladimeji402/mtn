@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { DataPlanGrid } from "@/components/data/data-plan-grid";
 import { InsufficientBalance } from "@/components/shared/insufficient-balance";
+import { PhoneFavorites } from "@/components/shared/phone-favorites";
 import { PurchaseConfirmSheet } from "@/components/shared/purchase-confirm-sheet";
 import { useIsDesktop } from "@/hooks/use-is-desktop";
 import { isMtnNumber } from "@/lib/validation";
@@ -207,6 +208,7 @@ export function DataPurchaseFlow({
             aria-invalid={!!phoneError}
           />
           {phoneError ? <p className="text-xs text-destructive">{phoneError}</p> : null}
+          <PhoneFavorites phoneNumber={phoneNumber} onSelect={setPhoneNumber} />
         </div>
 
         <div className="space-y-2">

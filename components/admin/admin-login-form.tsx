@@ -16,6 +16,9 @@ import { adminLogIn } from "@/lib/services/auth";
 export function AdminLoginForm() {
   const router = useRouter();
   const [submitError, setSubmitError] = React.useState<string | null>(null);
+  // Stays true through the redirect so the button keeps spinning instead of
+  // going idle while the admin dashboard's server data is still loading.
+  const [isRedirecting, setIsRedirecting] = React.useState(false);
 
   const {
     register,
@@ -26,13 +29,15 @@ export function AdminLoginForm() {
     defaultValues: { identifier: "", password: "" },
   });
 
+  const busy = isSubmitting || isRedirecting;
+
   async function onSubmit(values: AdminLoginValues) {
     setSubmitError(null);
     try {
       await adminLogIn(values);
       toast.success("Welcome back");
+      setIsRedirecting(true);
       router.push("/admin");
-      router.refresh();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong";
       setSubmitError(message);
@@ -57,7 +62,7 @@ export function AdminLoginForm() {
           id="identifier"
           placeholder="admin@example.com"
           autoComplete="username"
-          disabled={isSubmitting}
+          disabled={busy}
           aria-invalid={!!errors.identifier}
           className="h-12 border-zinc-700 bg-zinc-900 text-zinc-100 placeholder:text-zinc-500"
           {...register("identifier")}
@@ -74,7 +79,7 @@ export function AdminLoginForm() {
         <PasswordInput
           id="password"
           autoComplete="current-password"
-          disabled={isSubmitting}
+          disabled={busy}
           aria-invalid={!!errors.password}
           className="h-12 border-zinc-700 bg-zinc-900 text-zinc-100 placeholder:text-zinc-500"
           {...register("password")}
@@ -84,8 +89,8 @@ export function AdminLoginForm() {
         ) : null}
       </div>
 
-      <Button type="submit" className="h-12 w-full bg-brand text-base text-brand-foreground hover:bg-brand/90" disabled={isSubmitting}>
-        {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : null}
+      <Button type="submit" className="h-12 w-full bg-brand text-base text-brand-foreground hover:bg-brand/90" disabled={busy}>
+        {busy ? <Loader2 className="size-4 animate-spin" /> : null}
         Login
       </Button>
     </form>
