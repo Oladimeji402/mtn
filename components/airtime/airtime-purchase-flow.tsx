@@ -257,6 +257,10 @@ export function AirtimePurchaseFlow({ walletBalance }: { walletBalance: number }
         <Button type="submit" className="w-full" size="lg">
           Continue
         </Button>
+
+        <p className="text-center text-xs text-muted-foreground">
+          Check your airtime balance by dialing *310#
+        </p>
       </form>
 
       {!isDesktop && values ? (
