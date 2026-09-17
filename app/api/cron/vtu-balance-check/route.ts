@@ -5,10 +5,13 @@ import { notifyAdmins } from "@/lib/notify-admins";
 const DEFAULT_THRESHOLD = 5000;
 
 /**
- * Runs on Vercel Cron (see vercel.json) so admins get warned about a low VTU.ng wallet
- * before a customer purchase fails, not just after (the reactive path in
- * lib/actions/purchase.ts handles the "after" case). Won't run on localhost — cron
- * triggers only exist once this is deployed.
+ * Runs once daily at 06:00 UTC (07:00 WAT, before the business day typically starts) via
+ * Vercel Cron (see vercel.json) so admins get warned about a low VTU.ng wallet before a
+ * customer purchase fails, not just after (the reactive path in lib/actions/purchase.ts
+ * handles the "after" case). Once-daily, not more frequent, because this project is on
+ * Vercel's Hobby plan, which only allows once-per-day cron schedules — anything more
+ * frequent fails at deploy time. Won't run on localhost — cron triggers only exist once
+ * this is deployed.
  */
 export async function GET(request: NextRequest) {
   // Fails closed: an unset CRON_SECRET must not leave this open to the public — it

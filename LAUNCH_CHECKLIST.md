@@ -232,10 +232,13 @@ the reads (`getDataPlans`, `getTransactions`) were already real. Now wired for r
   like anyone else, no separate admin-alerts surface was built):
   1. **Reactive** — `lib/actions/purchase.ts` catches VTU's `insufficient_funds` error code
      specifically and notifies immediately when a real customer purchase fails because of it.
-  2. **Proactive** — `app/api/cron/vtu-balance-check/route.ts`, triggered every 6 hours by
-     Vercel Cron (`vercel.json`), checks the balance directly and warns if it's under
-     `VTU_LOW_BALANCE_THRESHOLD` (defaults to ₦5,000) — catches it before a customer is
-     affected, not just after.
+  2. **Proactive** — `app/api/cron/vtu-balance-check/route.ts`, triggered once daily at
+     06:00 UTC by Vercel Cron (`vercel.json`), checks the balance directly and warns if
+     it's under `VTU_LOW_BALANCE_THRESHOLD` (defaults to ₦5,000) — catches it before a
+     customer is affected, not just after. Once-daily, not more frequent, because this
+     project is on Vercel's **Hobby plan**, which only allows once-per-day cron schedules
+     — the original every-6-hours schedule failed at deploy time for exactly this reason.
+     If the project ever upgrades to Pro, this can go back to a tighter interval.
   - Both skip notifying an admin who already has an unread notification of this type, so
     it can't spam a dozen copies of the same unresolved warning.
   - **The cron only runs once deployed to Vercel** — there's no scheduler on localhost. Set
