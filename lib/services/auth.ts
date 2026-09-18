@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import type { EmailOtpType } from "@supabase/supabase-js";
 import type {
   ForgotPasswordValues,
   LoginValues,
@@ -85,6 +86,21 @@ export async function resetPassword(values: ResetPasswordValues) {
   const supabase = createClient();
   const { error } = await supabase.auth.updateUser({ password: values.password });
   if (error) throw new Error(mapAuthError(error.message));
+  return { success: true as const };
+}
+
+/**
+ * Actually consumes the single-use token from the email link — deliberately only called
+ * from a real button click (see components/auth/confirm-email-panel.tsx), never from the
+ * GET route the email link points to. Email clients and security scanners routinely
+ * prefetch links automatically; if verifyOtp ran on that GET, the scanner would silently
+ * consume the token before the real user ever clicked it, and the user would land on a
+ * false "expired" error even though the account was already verified by the scanner's hit.
+ */
+export async function confirmEmail(tokenHash: string, type: EmailOtpType) {
+  const supabase = createClient();
+  const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
+  if (error) throw new Error("This link is invalid or has expired.");
   return { success: true as const };
 }
 

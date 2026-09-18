@@ -6,6 +6,20 @@ const nextConfig: NextConfig = {
   // an ngrok tunnel, since Monipay's live API rejects localhost callback URLs.
   allowedDevOrigins: ["*.ngrok-free.app"],
 
+  // Every dashboard route is dynamic (per-user data behind auth) and has a loading.tsx,
+  // which by default gives it a 0-second client-side cache (staleTimes.dynamic — dropped
+  // from 30s to 0s in Next 15+). That meant every revisit, even hitting Back a second
+  // later, was treated as brand new and re-fetched, flashing the loading skeleton again
+  // every time. 30s is enough to kill that flash on normal back-and-forth navigation while
+  // staying short enough that wallet balance/transactions don't go meaningfully stale —
+  // any real mutation (funding, a purchase) still redirects/refreshes through a Server
+  // Action, which always hits the server fresh regardless of this cache.
+  experimental: {
+    staleTimes: {
+      dynamic: 30,
+    },
+  },
+
   // Security headers found missing in a pre-launch review. Deliberately NOT setting
   // Strict-Transport-Security here — Vercel adds it automatically on every deployment,
   // and setting it ourselves would also apply in local dev, where a browser that caches
