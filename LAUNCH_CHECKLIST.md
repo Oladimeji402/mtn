@@ -21,6 +21,15 @@ up cold — read this file first, then the codebase.
   Full stack: `lib/vtu.ts`, `lib/actions/purchase.ts`, `app/api/webhooks/vtu/route.ts`,
   `data_plans` reseeded with VTU.ng's real live MTN catalog (9 plans, 10% markup over
   `reseller_price` — see "Purchases: VTU.ng" below) and no per-purchase size cap.
+- **Data purchases via SMEData.ng — fully proven live, real money, 2026-09-18.** Real ₦627
+  1GB purchase completed in ~5 seconds, `status: successful`, real SMEData order id `878774`,
+  data confirmed landed on the recipient phone. Added as a second provider specifically for
+  1GB/2GB/3GB/5GB "Data Share" plans (`mtn-1gb-30d`, `mtn-2gb-30d-share`, `mtn-3gb-30d`,
+  `mtn-5gb-30d`) that VTU either doesn't stock or doesn't offer — see "Purchases: SMEData.ng"
+  below for the full story, including a real pricing bug the price-drift check caught and
+  fixed during this same test (migration `0023`). VTU stays the sole airtime provider and the
+  primary/default data provider — SMEData has real reliability gaps (no idempotency key, no
+  signed webhooks, no balance-check API) documented in that section.
 - All reads (wallet, transactions, notifications, data plans, usage) — real Supabase data
 - Admin: enable/disable users. The per-purchase data cap (was 5GB, admin-configurable) was
   removed entirely at the client's request (migration `0011`) — any active plan, including
@@ -245,30 +254,74 @@ the reads (`getDataPlans`, `getTransactions`) were already real. Now wired for r
     `CRON_SECRET` in Vercel's env vars (same value as `.env.local`) so the route only
     accepts Vercel's own cron requests, not arbitrary public GETs.
 
+## Purchases: SMEData.ng
+
+Added 2026-09-18 as a second data-purchase provider, specifically because the client wanted
+1GB/2GB/3GB/5GB plans and VTU either has those SKUs marked `"availability": "Unavailable"`
+(3GB/5GB) or only has them bundled with bonus minutes at a different price (1GB/2GB). VTU
+remains the **sole** airtime provider (SMEData has no airtime API at all) and the default/
+primary data provider — routing is per-plan via `data_plans.provider` (`'vtu'` | `'smedata'`).
+
+- `lib/smedata.ts` — the whole API is `GET`-only with the token as a URL query param (their
+  design), covering just two endpoints: `/data` (places the order **and spends real money in
+  one call** — no separate confirm step) and `/requery` (read-only status check).
+- **Real reliability gaps versus VTU, by design of SMEData's API, not a bug in our code:**
+  - No request-id/idempotency parameter — a network-level failure on `/data` means we
+    genuinely can't know if the order went through, and can't safely auto-retry. Not
+    auto-retried anywhere; a lost request just settles as failed in our own records.
+  - No webhook signature of any kind (VTU/Monipay both HMAC-sign). `app/api/webhooks/smedata/
+    route.ts` never trusts the payload directly — it only uses it to look up which order to
+    check, then calls `requerySmeOrder()` ourselves (our own authenticated call) and finalizes
+    off *that* response.
+  - No balance-check API and no pricing/catalog API — confirmed by reading their full route
+    list (`GET https://smedata.ng/wp-json/api/v1/`, only 7 routes total, 3 of them unused
+    debug endpoints). Real pricing is only visible by logging into their dashboard as a human.
+- **`data_plans.reseller_cost` + price-drift detection** (migrations `0020`/`0021`,
+  `checkSmePriceDrift()` in `lib/actions/purchase.ts`) exists because of the above — with no
+  pricing API, the only live signal available is comparing what a real purchase actually
+  charges against what we expected, and notifying admins (`plan_price_drift` type) if it
+  moved, so they can update the price manually. Not an auto-updater on purpose.
+- **This price-drift check already caught a real pricing bug the same day it was built.**
+  SMEData's logged-in dashboard/storefront shows a "Sale!" discounted price (e.g. ₦570 for
+  1GB) that turned out to be a **web-checkout-only promotion — the API charges the original,
+  non-discounted price** (₦600, confirmed by a real ₦627 1GB purchase, order id `878774`,
+  data confirmed landed on the recipient phone, 2026-09-18). Migration `0019` had "corrected"
+  pricing down to the discounted numbers, which was itself wrong; migration `0023` corrected
+  it back up using the real confirmed API-charged amount. Current prices (10% markup over the
+  non-discounted reseller cost): 1GB ₦660, 2GB ₦1,320, 3GB ₦1,980, 5GB ₦3,300. Only 1GB has
+  been confirmed by an actual transaction — 2GB/3GB/5GB pricing assumes the same discount
+  pattern applies uniformly, which is likely but not individually proven yet.
+- **Credentials**: `SMEDATA_API_TOKEN` in `.env.local`, from their Reseller Dashboard. Still
+  needs adding to Vercel's Production env vars — see "Blocking actual launch" below. Webhook
+  URL must be pasted into their dashboard manually (no API to set it) — whatever the current
+  ngrok URL is for local testing; the real production URL once deployed.
+
 ## Blocking actual launch
 
 1. **Monipay's fee is unresolved.** ~8.87% on a bank transfer is high; client is following up
    with Monipay directly. Decide (and possibly flip the "who bears the fee" toggle) before
    launch.
-2. **Vercel production env vars are missing Monipay's and VTU's entirely.**
-   `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` are
-   set in Vercel already. `MONIPAY_SECRET_KEY`, `MONIPAY_PUBLIC_KEY`, `VTU_USERNAME`,
-   `VTU_PASSWORD`, `VTU_USER_PIN`, **`CRON_SECRET`** are **not** — both wallet funding and
-   purchases are broken on the live site until these are added (Project Settings →
-   Environment Variables → Production), and the VTU balance-check cron route stays
-   unauthenticated (it now fails closed — see "Security audit" — but it still needs the real
-   secret to actually run). Also register both webhook URLs in each provider's dashboard,
-   pointing at `https://mtn-neon-six.vercel.app/api/webhooks/monipay` and `.../api/webhooks/vtu`
-   (both are currently pointed at a throwaway ngrok tunnel from local testing — dead as soon
-   as that tunnel closes).
+2. ~~Vercel production env vars missing Monipay's and VTU's~~ — **done 2026-09-17**:
+   `MONIPAY_SECRET_KEY`, `MONIPAY_PUBLIC_KEY`, `VTU_USERNAME`, `VTU_PASSWORD`, `VTU_USER_PIN`,
+   `CRON_SECRET` all added to Vercel Production. **Still outstanding: `SMEDATA_API_TOKEN`**
+   (added 2026-09-18, not yet in Vercel) — add it the same way (Project Settings →
+   Environment Variables → Production). Also still need to: register the SMEData webhook URL
+   in their dashboard pointing at `https://mtn-neon-six.vercel.app/api/webhooks/smedata` (it's
+   currently pointed at a throwaway ngrok tunnel from local testing — dead as soon as that
+   tunnel closes), and double-check Monipay's and VTU's webhook URLs are still pointed at the
+   real production domain, not a stale ngrok URL from a later local testing session.
 3. **Configure Vercel Firewall rate limiting** and **enable Supabase's leaked-password
    protection** — both dashboard-only, see "Security audit" above for specifics.
 4. **Supabase project tier.** Confirm it's not on the free tier before real money touches
    it — free tier pauses after a week of inactivity. Also turn on **Point-in-Time
    Recovery** — not optional for a financial app.
-5. **Supabase Auth redirect URLs.** The production domain needs to be added to Supabase's
-   allowed redirect URL list (Auth settings) or signup/password-reset emails will link to
-   the wrong place / get rejected.
+5. ~~Supabase Auth redirect URLs~~ — **done 2026-09-17**, production domain added to the
+   allowed redirect URL list. Re-confirm once the real custom domain replaces
+   `mtn-neon-six.vercel.app`.
+6. **`MIN_FUNDING_AMOUNT` is currently `200`** (`lib/constants.ts`), lowered temporarily for
+   quick local testing on 2026-09-18. **Must be restored to `1350`** (the client's actual
+   business decision, set 2026-09-17) before launch — this is a local-only, uncommitted
+   change so it hasn't reached production, but don't forget to revert it.
 
 ## Real, but not launch-blocking
 
@@ -293,6 +346,24 @@ the reads (`getDataPlans`, `getTransactions`) were already real. Now wired for r
   real question.
 - Client hasn't answered the rest of the original business-details questionnaire (address,
   social handles, longer description) — not blocking, just unconfirmed.
+- **Client wants 3GB and 5GB MTN data plans too.** Checked VTU.ng's live catalog
+  (`GET /api/v2/variations/data?service_id=mtn`, no auth needed) on 2026-09-17: the exact
+  "3GB - 30 Days" (variation 229126) and "5GB - 30 Days" (variation 2678) SKUs exist but are
+  both marked `"availability": "Unavailable"` — VTU is currently out of stock on them, not a
+  bug here. The 9 plans live on the site today are all confirmed `"Available"`. 3.5GB/30-day
+  is already live as the closest substitute for "3GB". Looked at SMEData.ng
+  (https://smedata.ng/mtn-sme-data-api-documentation-for-developers/) as an alternative that
+  lists 3GB/5GB by name, but their docs publish no pricing/validity and it'd be a full second
+  integration (different auth style — token in URL, GET-only requests, separate real-money
+  wallet, separate webhook signing) — decided not to add this the night before launch. Client
+  decision (2026-09-17): launch tomorrow without 3GB/5GB; client will demo the live site to
+  their client first, then integrate SMEData.ng as a second provider right after — client's
+  choice, since SMEData.ng's docs list exactly the 3GB/5GB sizes wanted. Needs before that
+  work can start: an SMEData.ng account + API token (their auth is a token-in-URL-param, not
+  JWT like VTU), their real MTN pricing (not published on the public docs page), and their
+  webhook payload/signing format if they have one. Once the client has the token, send it and
+  the integration + markup pricing + live real-money test will follow the same pattern used
+  for VTU/Monipay.
 
 ## When the client's credentials/answers arrive — what to actually do
 

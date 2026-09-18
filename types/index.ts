@@ -119,7 +119,9 @@ export type NotificationType =
   | "daily_limit_warning"
   | "monthly_limit_warning"
   | "security"
-  | "vtu_balance_low";
+  | "vtu_balance_low"
+  | "sme_balance_low"
+  | "plan_price_drift";
 
 export interface Notification {
   id: string;

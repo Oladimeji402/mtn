@@ -66,12 +66,12 @@ export async function initializeMonipayTransaction(params: {
     cache: "no-store",
   });
 
+  const json = (await res.json().catch(() => null)) as MonipayInitializeResponse | null;
   if (!res.ok) {
-    throw new Error(`Monipay initialize failed: HTTP ${res.status}`);
+    throw new Error(json?.message || `Monipay initialize failed: HTTP ${res.status}`);
   }
-  const json = (await res.json()) as MonipayInitializeResponse;
-  if (!json.status || !json.data?.authorization_url) {
-    throw new Error(json.message || "Monipay did not return a checkout URL.");
+  if (!json?.status || !json.data?.authorization_url) {
+    throw new Error(json?.message || "Monipay did not return a checkout URL.");
   }
   return json.data;
 }

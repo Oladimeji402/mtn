@@ -17,12 +17,19 @@ export const MAX_FUNDING_AMOUNT = 135000;
 export const MIN_AIRTIME_AMOUNT = 50;
 export const MAX_AIRTIME_AMOUNT = 50000;
 
-/** Real MTN Nigeria mobile number prefixes, used to validate purchase phone numbers. */
+/**
+ * Real MTN Nigeria mobile number prefixes, used as a client-side sanity check on purchase
+ * phone numbers. This can never be fully authoritative — Nigeria has had mobile number
+ * portability since 2013, so a prefix's original carrier doesn't guarantee its current one.
+ * The actual backstop is VTU.ng/SMEData.ng's own purchase-time validation, which fails
+ * cleanly (and refunds) if a number genuinely isn't MTN — see lib/purchase-fulfillment.ts.
+ */
 export const MTN_PREFIXES = [
   "0803",
   "0806",
   "0703",
   "0706",
+  "0707", // formerly ZoomMobile/Reltel, later absorbed into MTN's range
   "0813",
   "0814",
   "0816",

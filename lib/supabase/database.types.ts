@@ -27,7 +27,9 @@ export type NotificationTypeDb =
   | "daily_limit_warning"
   | "monthly_limit_warning"
   | "security"
-  | "vtu_balance_low";
+  | "vtu_balance_low"
+  | "sme_balance_low"
+  | "plan_price_drift";
 
 type Relationship = {
   foreignKeyName: string;
@@ -122,6 +124,9 @@ export interface Database {
         popular: boolean;
         active: boolean;
         vtu_variation_id: string | null;
+        provider: string;
+        sme_size_code: string | null;
+        reseller_cost: number | null;
       }>;
       notifications: Table<{
         id: string;

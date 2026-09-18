@@ -2,15 +2,16 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
- * The single settlement path for a purchase's outcome, shared by the purchase Server
- * Action (immediate outcome from VTU's synchronous response), the VTU webhook (later
- * outcome — refunds, or a rare manually-completed order), and the manual "Check status"
- * requery action. The status check here is a fast-path only (skips an RPC round trip in
- * the common non-racing case) — fn_finalize_purchase itself re-checks status atomically
+ * The single settlement path for a purchase's outcome, shared by both providers (VTU.ng,
+ * SMEData.ng) — the purchase Server Action's immediate outcome from a provider's synchronous
+ * response, a provider's webhook (later outcome — refunds, a manually-completed order, or
+ * SMEData's unsigned webhook once verified via its own requery), and the manual "Check
+ * status" requery action. The status check here is a fast-path only (skips an RPC round trip
+ * in the common non-racing case) — fn_finalize_purchase itself re-checks status atomically
  * after acquiring its row lock (migration 0014), so this stays correct even if two of
  * these callers land at genuinely the same moment.
  */
-export async function finalizeVtuPurchase(params: {
+export async function finalizePurchase(params: {
   purchaseId: string;
   outcome: "successful" | "failed";
   providerReference: string | null;

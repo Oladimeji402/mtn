@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { finalizeVtuPurchase } from "@/lib/purchase-fulfillment";
+import { finalizePurchase } from "@/lib/purchase-fulfillment";
 import { mapVtuOrderOutcome, verifyVtuWebhookSignature, type VtuOrderStatus } from "@/lib/vtu";
 
 /**
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
-    await finalizeVtuPurchase({
+    await finalizePurchase({
       purchaseId: purchase.id,
       outcome,
       providerReference: String(payload.order_id),
