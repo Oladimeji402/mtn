@@ -5,34 +5,9 @@ import { Download, Share, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { APP_NAME } from "@/lib/constants";
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useInstallApp } from "@/hooks/use-install-app";
 
 const DISMISSED_KEY = "bunben-install-dismissed";
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
-
-function neverChanges() {
-  return () => {};
-}
-
-// Static per session (the OS/browser doesn't change mid-visit) — read via
-// useSyncExternalStore so the client-only value is applied after hydration
-// instead of during the initial render, which is what avoids a mismatch against
-// the server's render (which has no navigator/matchMedia to check at all).
-function getIsIos() {
-  if (typeof navigator === "undefined") return false;
-  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !/CriOS|FxiOS/i.test(navigator.userAgent);
-}
-function getIsStandalone() {
-  if (typeof window === "undefined") return false;
-  return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    (window.navigator as unknown as { standalone?: boolean }).standalone === true
-  );
-}
-const serverFalse = () => false;
 
 /**
  * Registers the service worker and shows a small, dismissible install banner.
@@ -41,12 +16,10 @@ const serverFalse = () => false;
  * get manual "Share → Add to Home Screen" instructions instead of a dead button.
  */
 export function InstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = React.useState<BeforeInstallPromptEvent | null>(null);
+  const { canPrompt, isIos, isStandalone, install } = useInstallApp();
   const [dismissed, setDismissed] = useLocalStorage(DISMISSED_KEY, false);
-  const isIosDevice = React.useSyncExternalStore(neverChanges, getIsIos, serverFalse);
-  const isStandalone = React.useSyncExternalStore(neverChanges, getIsStandalone, serverFalse);
 
-  const showIosHint = isIosDevice && !isStandalone && !dismissed;
+  const showIosHint = isIos && !isStandalone && !dismissed;
 
   React.useEffect(() => {
     if ("serviceWorker" in navigator) {
@@ -56,30 +29,17 @@ export function InstallPrompt() {
     }
   }, []);
 
-  React.useEffect(() => {
-    if (isStandalone || dismissed || isIosDevice) return;
-
-    function handleBeforeInstallPrompt(e: Event) {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-    }
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-  }, [isStandalone, dismissed, isIosDevice]);
+  const showPrompt = canPrompt && !isStandalone && !dismissed;
 
   function dismiss() {
-    setDeferredPrompt(null);
     setDismissed(true);
   }
 
   async function handleInstall() {
-    if (!deferredPrompt) return;
-    await deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    setDeferredPrompt(null);
+    await install();
   }
 
-  if (!deferredPrompt && !showIosHint) return null;
+  if (!showPrompt && !showIosHint) return null;
 
   return (
     <div className="fixed bottom-20 right-4 z-40 w-72 rounded-xl border bg-card p-4 shadow-lg lg:bottom-4">

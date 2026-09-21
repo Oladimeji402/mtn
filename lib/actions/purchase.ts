@@ -4,12 +4,11 @@ import crypto from "crypto";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { finalizePurchase } from "@/lib/purchase-fulfillment";
-import { mapVtuOrderOutcome, purchaseMtnAirtime, purchaseMtnData as purchaseVtuData, requeryVtuOrder, VtuApiError } from "@/lib/vtu";
+import { mapVtuOrderOutcome, purchaseMtnData as purchaseVtuData, requeryVtuOrder, VtuApiError } from "@/lib/vtu";
 import { purchaseMtnData as purchaseSmeData, requerySmeOrder, isSmeInsufficientBalance, SmeDataApiError } from "@/lib/smedata";
 import { notifyAdmins } from "@/lib/notify-admins";
 import { assertNotRateLimited } from "@/lib/rate-limit";
 import { getTransaction } from "@/lib/services/transactions";
-import { MAX_AIRTIME_AMOUNT, MIN_AIRTIME_AMOUNT } from "@/lib/constants";
 import type { Transaction } from "@/types";
 
 function generateReference(prefix: string) {
@@ -61,64 +60,6 @@ function mapCreatePurchaseError(message: string): string {
   if (message.includes("WALLET_NOT_FOUND")) return "Wallet not found.";
   if (message.includes("NOT_AUTHENTICATED")) return "Not authenticated";
   return "Could not start purchase. Please try again.";
-}
-
-/**
- * Debits the wallet and creates a 'processing' purchase row first (fn_create_purchase),
- * THEN calls VTU.ng — so if the VTU call itself throws (network error, their API down),
- * the purchase already exists and gets finalized as failed/refunded rather than money
- * silently leaving the wallet with no record of why.
- */
-export async function purchaseAirtimeAction(input: {
-  phoneNumber: string;
-  amount: number;
-}): Promise<Transaction> {
-  if (input.amount < MIN_AIRTIME_AMOUNT || input.amount > MAX_AIRTIME_AMOUNT) {
-    throw new Error(`Amount must be between ₦${MIN_AIRTIME_AMOUNT} and ₦${MAX_AIRTIME_AMOUNT.toLocaleString()}.`);
-  }
-
-  const supabase = await createClient();
-  await assertNotRateLimited("purchase_airtime", 10, 300);
-  const reference = generateReference("AIR");
-
-  const { data: purchase, error } = await supabase.rpc("fn_create_purchase", {
-    p_type: "airtime",
-    p_network: "MTN",
-    p_phone_number: input.phoneNumber,
-    p_amount: input.amount,
-    p_data_plan_id: null,
-    p_reference: reference,
-  });
-  if (error) throw new Error(mapCreatePurchaseError(error.message));
-
-  try {
-    const order = await purchaseMtnAirtime({
-      requestId: reference,
-      phone: input.phoneNumber,
-      amount: input.amount,
-    });
-    const outcome = mapVtuOrderOutcome(order.status);
-    if (outcome !== "pending") {
-      await finalizePurchase({
-        purchaseId: purchase.id,
-        outcome,
-        providerReference: String(order.order_id),
-        failureReason: outcome === "failed" ? `VTU order ${order.status}` : null,
-      });
-    }
-  } catch (err) {
-    await notifyAdminsIfProviderOutOfFunds(err);
-    await finalizePurchase({
-      purchaseId: purchase.id,
-      outcome: "failed",
-      providerReference: null,
-      failureReason: err instanceof Error ? err.message : "VTU request failed",
-    });
-  }
-
-  const result = await getTransaction(purchase.id);
-  if (!result) throw new Error("Purchase not found after processing.");
-  return result;
 }
 
 export async function purchaseDataAction(input: {

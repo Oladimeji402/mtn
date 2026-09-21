@@ -28,7 +28,7 @@ export function DashboardHeader({
       className="fixed inset-x-0 top-0 z-40 flex h-[calc(3.5rem+env(safe-area-inset-top))] items-center gap-3 border-b border-transparent bg-gradient-to-br from-brand to-amber-500 px-4 pt-[env(safe-area-inset-top)] backdrop-blur sm:h-16 sm:border-border sm:bg-background/95 sm:bg-none sm:px-6 sm:pt-0 lg:sticky lg:left-auto lg:right-auto"
     >
       {/* Greeting — always visible on mobile, hidden on sm+ */}
-      <p className="truncate text-base font-semibold text-brand-foreground sm:hidden">
+      <p className="truncate text-base font-semibold text-white sm:hidden">
         Hi, {username}
       </p>
 
@@ -41,7 +41,7 @@ export function DashboardHeader({
         <Button
           variant="ghost"
           size="icon"
-          className="relative size-11 text-brand-foreground hover:bg-white/25 hover:text-brand-foreground sm:size-10 sm:text-foreground sm:hover:bg-accent sm:hover:text-foreground"
+          className="relative size-11 text-white hover:bg-white/25 hover:text-white sm:size-10 sm:text-foreground sm:hover:bg-accent sm:hover:text-foreground"
           asChild
         >
           <Link href="/dashboard/notifications" aria-label="Notifications">

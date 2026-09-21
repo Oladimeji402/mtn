@@ -12,7 +12,6 @@ export function MobileBottomNav() {
   const moreRoutes = [
     "/dashboard/more",
     "/dashboard/wallet",
-    "/dashboard/transactions",
     "/dashboard/notifications",
     "/dashboard/profile",
     "/dashboard/support",

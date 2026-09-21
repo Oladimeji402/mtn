@@ -2,7 +2,6 @@ import Link from "next/link";
 import {
   ArrowRight,
   Wallet,
-  Smartphone,
   ShieldCheck,
   Gauge,
   Bell,
@@ -23,7 +22,7 @@ const steps = [
     description: "Pay with card.",
   },
   {
-    title: "Buy airtime or data",
+    title: "Buy data",
     description: "For any MTN number.",
   },
   {
@@ -45,8 +44,8 @@ const benefits = [
   },
   {
     icon: BarChart3,
-    title: "MTN airtime & data",
-    description: "Recharge any MTN number anytime.",
+    title: "MTN data",
+    description: "Top up any MTN number anytime.",
   },
   {
     icon: Bell,
@@ -64,7 +63,7 @@ const trustPoints = [
 const faqs = [
   {
     q: "Which network does this support?",
-    a: "MTN airtime and data only.",
+    a: "MTN data only.",
   },
   {
     q: "How do I add money to my wallet?",
@@ -87,13 +86,13 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-2 lg:items-center lg:py-28">
           <div className="space-y-6">
             <span className="inline-flex items-center rounded-full border bg-background px-3 py-1 text-xs font-medium text-muted-foreground">
-              MTN Airtime &amp; Data
+              MTN Data
             </span>
             <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
-              Buy MTN Airtime &amp; Data
+              Buy MTN Data
             </h1>
             <p className="max-w-lg text-base text-muted-foreground sm:text-lg">
-              Fund your wallet, then buy airtime or data for any MTN number.
+              Fund your wallet, then buy data for any MTN number.
             </p>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button size="lg" asChild>
@@ -118,11 +117,7 @@ export default function HomePage() {
             <p className="mt-1 text-3xl font-semibold tracking-tight">
               {formatNaira(12500)}
             </p>
-            <div className="mt-5 grid grid-cols-2 gap-2">
-              <div className="rounded-md border bg-background p-3 text-sm">
-                <Smartphone className="mb-2 size-4 text-muted-foreground" />
-                Buy Airtime
-              </div>
+            <div className="mt-5 grid grid-cols-1 gap-2">
               <div className="rounded-md border bg-background p-3 text-sm">
                 <Wifi className="mb-2 size-4 text-muted-foreground" />
                 Buy Data
@@ -136,7 +131,7 @@ export default function HomePage() {
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">MTN Airtime — ₦500</span>
+                <span className="text-muted-foreground">MTN Data — 3GB</span>
                 <span className="inline-flex items-center gap-1 font-medium text-success">
                   <CircleCheckBig className="size-3.5" /> Successful
                 </span>

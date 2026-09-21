@@ -1,8 +1,1 @@
-{
-  "crons": [
-    {
-      "path": "/api/cron/vtu-balance-check",
-      "schedule": "0 6 * * *"
-    }
-  ]
-}
+{}

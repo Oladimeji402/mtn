@@ -30,7 +30,7 @@ export function AuthCard({
               {APP_NAME}
             </p>
             <p className="mt-1 text-sm text-brand-foreground/80">
-              Buy MTN Airtime &amp; Data
+              Buy MTN Data
             </p>
             <div className="mt-4 hidden flex-wrap items-center justify-center gap-2 sm:flex">
               {badges.map((b) => (
