@@ -1,5 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
+import { UserError } from "@/lib/errors";
 
 /**
  * Per-user throttle for the actions that either spend real money (VTU purchases) or hit
@@ -16,7 +17,7 @@ export async function assertNotRateLimited(action: string, maxAttempts: number, 
     p_window_seconds: windowSeconds,
   });
   if (error?.message.includes("RATE_LIMITED")) {
-    throw new Error("Too many attempts. Please wait a few minutes and try again.");
+    throw new UserError("Too many attempts. Please wait a few minutes and try again.");
   }
   if (error) {
     throw new Error("Could not process your request. Please try again.");

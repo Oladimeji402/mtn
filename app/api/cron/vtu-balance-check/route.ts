@@ -1,3 +1,4 @@
+import { reportError } from "@/lib/error-log";
 import { type NextRequest, NextResponse } from "next/server";
 import { checkVtuBalance } from "@/lib/vtu";
 import { notifyAdmins } from "@/lib/notify-admins";
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ balance, threshold });
   } catch (err) {
-    console.error("VTU balance check failed", err);
+    await reportError({ source: "cron:vtu-balance-check", error: err, userId: null });
     return NextResponse.json({ error: "Check failed" }, { status: 500 });
   }
 }

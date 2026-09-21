@@ -14,6 +14,8 @@ import { RecentWalletActivity } from "@/components/wallet/recent-wallet-activity
 import { MIN_FUNDING_AMOUNT, QUICK_FUND_AMOUNTS } from "@/lib/constants";
 import { formatNaira } from "@/lib/format";
 import { fundWalletSchema, type FundWalletValues } from "@/lib/validation";
+import { FUNDING_FAILED_MESSAGE } from "@/lib/customer-messages";
+import { GENERIC_ERROR_MESSAGE, errorText } from "@/lib/errors";
 import { confirmWalletFundingAction, initiateWalletFundingAction } from "@/lib/actions/wallet";
 import { cn, screenPanelClass } from "@/lib/utils";
 import type { WalletTransaction } from "@/types";
@@ -65,7 +67,14 @@ export function FundWalletFlow({
     router.replace("/dashboard/wallet");
 
     confirmWalletFundingAction(reference)
-      .then((result) => {
+      .then((res) => {
+        if (!res.ok) {
+          setError(errorText(res));
+          setStep("failed");
+          toast.error(errorText(res));
+          return;
+        }
+        const result = res.data;
         if (result.outcome === "successful") {
           setNewBalance(result.newBalance ?? currentBalance);
           setStep("success");
@@ -75,13 +84,13 @@ export function FundWalletFlow({
           setStep("delayed");
           toast.message("Confirming payment");
         } else {
-          setError(result.reason ?? null);
+          setError(FUNDING_FAILED_MESSAGE);
           setStep("failed");
-          toast.error(result.reason ?? "Payment failed");
+          toast.error(FUNDING_FAILED_MESSAGE);
         }
       })
-      .catch((err) => {
-        setError(err instanceof Error ? err.message : "Could not confirm payment.");
+      .catch(() => {
+        setError(GENERIC_ERROR_MESSAGE);
         setStep("failed");
       });
     // Only re-run if the query string itself changes — router/currentBalance are stable enough here.
@@ -98,12 +107,17 @@ export function FundWalletFlow({
     setError(null);
     setStep("processing");
     try {
-      const { authorizationUrl } = await initiateWalletFundingAction(amount);
-      window.location.href = authorizationUrl;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Could not start payment";
-      setError(message);
-      toast.error(message);
+      const res = await initiateWalletFundingAction(amount);
+      if (!res.ok) {
+        setError(errorText(res));
+        toast.error(errorText(res));
+        setStep("confirm");
+        return;
+      }
+      window.location.href = res.data.authorizationUrl;
+    } catch {
+      setError(GENERIC_ERROR_MESSAGE);
+      toast.error(GENERIC_ERROR_MESSAGE);
       setStep("confirm");
     }
   }

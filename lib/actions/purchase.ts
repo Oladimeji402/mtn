@@ -8,6 +8,9 @@ import { mapVtuOrderOutcome, purchaseMtnData as purchaseVtuData, requeryVtuOrder
 import { purchaseMtnData as purchaseSmeData, requerySmeOrder, isSmeInsufficientBalance, SmeDataApiError } from "@/lib/smedata";
 import { notifyAdmins } from "@/lib/notify-admins";
 import { assertNotRateLimited } from "@/lib/rate-limit";
+import { UserError, type ActionResult } from "@/lib/errors";
+import { reportError } from "@/lib/error-log";
+import { runAction } from "@/lib/run-action";
 import { getTransaction } from "@/lib/services/transactions";
 import type { Transaction } from "@/types";
 
@@ -53,19 +56,22 @@ async function checkSmePriceDrift(plan: { id: string; reseller_cost: number | nu
   });
 }
 
-function mapCreatePurchaseError(message: string): string {
-  if (message.includes("INSUFFICIENT_BALANCE")) return "Insufficient wallet balance.";
-  if (message.includes("INVALID_PLAN")) return "This data plan is no longer available.";
-  if (message.includes("PLAN_EXCEEDS_MAXIMUM")) return "This plan exceeds the maximum allowed per purchase.";
-  if (message.includes("WALLET_NOT_FOUND")) return "Wallet not found.";
-  if (message.includes("NOT_AUTHENTICATED")) return "Not authenticated";
-  return "Could not start purchase. Please try again.";
+/** Known, customer-safe outcomes of fn_create_purchase; anything else is unexpected. */
+function toCreatePurchaseError(message: string): Error {
+  if (message.includes("INSUFFICIENT_BALANCE")) return new UserError("Insufficient wallet balance. Please fund your wallet and try again.");
+  if (message.includes("INVALID_PLAN")) return new UserError("This data plan is no longer available.");
+  if (message.includes("NOT_AUTHENTICATED")) return new UserError("Please log in again to continue.");
+  return new Error(`fn_create_purchase failed: ${message}`);
 }
 
 export async function purchaseDataAction(input: {
   phoneNumber: string;
   dataPlanId: string;
-}): Promise<Transaction> {
+}): Promise<ActionResult<Transaction>> {
+  return runAction("purchaseData", () => purchaseData(input));
+}
+
+async function purchaseData(input: { phoneNumber: string; dataPlanId: string }): Promise<Transaction> {
   const supabase = await createClient();
   await assertNotRateLimited("purchase_data", 10, 300);
 
@@ -75,7 +81,7 @@ export async function purchaseDataAction(input: {
     .eq("id", input.dataPlanId)
     .eq("active", true)
     .maybeSingle();
-  if (!plan) throw new Error("This data plan is no longer available.");
+  if (!plan) throw new UserError("This data plan is no longer available.");
   if (plan.provider === "vtu" && !plan.vtu_variation_id) {
     throw new Error("This plan isn't linked to a provider yet — contact support.");
   }
@@ -94,7 +100,7 @@ export async function purchaseDataAction(input: {
     p_data_plan_id: plan.id,
     p_reference: reference,
   });
-  if (error) throw new Error(mapCreatePurchaseError(error.message));
+  if (error) throw toCreatePurchaseError(error.message);
 
   if (plan.provider === "smedata") {
     try {
@@ -123,6 +129,7 @@ export async function purchaseDataAction(input: {
       // error here means we genuinely don't know if the order was placed, same unresolved
       // edge case the VTU path below already accepts. Not auto-retried either way.
       await notifyAdminsIfProviderOutOfFunds(err);
+      await reportError({ source: "provider:smedata", error: err, context: { purchaseId: purchase.id, planId: plan.id } });
       await finalizePurchase({
         purchaseId: purchase.id,
         outcome: "failed",
@@ -153,6 +160,7 @@ export async function purchaseDataAction(input: {
     }
   } catch (err) {
     await notifyAdminsIfProviderOutOfFunds(err);
+    await reportError({ source: "provider:vtu", error: err, context: { purchaseId: purchase.id, planId: plan.id } });
     await finalizePurchase({
       purchaseId: purchase.id,
       outcome: "failed",
@@ -169,12 +177,16 @@ export async function purchaseDataAction(input: {
 /** Manual reconciliation for a purchase stuck in 'processing'. VTU.ng's webhook only fires
  *  for refunds and manually-completed orders, not normal automated completions; SMEData's
  *  webhook has no signature so this requery path is the trustworthy source for it too. */
-export async function requeryPurchaseAction(purchaseId: string): Promise<Transaction> {
+export async function requeryPurchaseAction(purchaseId: string): Promise<ActionResult<Transaction>> {
+  return runAction("requeryPurchase", () => requeryPurchase(purchaseId));
+}
+
+async function requeryPurchase(purchaseId: string): Promise<Transaction> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
+  if (!user) throw new UserError("Please log in again to continue.");
 
   const admin = createAdminClient();
   const { data: purchase } = await admin
@@ -182,7 +194,7 @@ export async function requeryPurchaseAction(purchaseId: string): Promise<Transac
     .select("id, reference, user_id, status, data_plan_id, provider_reference")
     .eq("id", purchaseId)
     .maybeSingle();
-  if (!purchase || purchase.user_id !== user.id) throw new Error("Purchase not found.");
+  if (!purchase || purchase.user_id !== user.id) throw new UserError("We couldn't find that purchase.");
 
   if (purchase.status === "processing") {
     let provider: "vtu" | "smedata" = "vtu";
@@ -222,6 +234,6 @@ export async function requeryPurchaseAction(purchaseId: string): Promise<Transac
   }
 
   const result = await getTransaction(purchaseId);
-  if (!result) throw new Error("Purchase not found.");
+  if (!result) throw new UserError("We couldn't find that purchase.");
   return result;
 }

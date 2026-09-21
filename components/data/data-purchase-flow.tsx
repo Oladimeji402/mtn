@@ -15,6 +15,8 @@ import { useIsDesktop } from "@/hooks/use-is-desktop";
 import { isMtnNumber } from "@/lib/validation";
 import { formatNaira, formatPhoneNumber } from "@/lib/format";
 import { purchaseDataAction } from "@/lib/actions/purchase";
+import { PURCHASE_FAILED_MESSAGE } from "@/lib/customer-messages";
+import { GENERIC_ERROR_MESSAGE, errorText } from "@/lib/errors";
 import { cn, screenPadClass, screenPanelClass } from "@/lib/utils";
 import type { DataPlan, Transaction } from "@/types";
 
@@ -55,7 +57,13 @@ export function DataPurchaseFlow({
     setStep("processing");
     setError(null);
     try {
-      const res = await purchaseDataAction({ phoneNumber, dataPlanId: plan.id });
+      const response = await purchaseDataAction({ phoneNumber, dataPlanId: plan.id });
+      if (!response.ok) {
+        setError(errorText(response));
+        setStep("confirm");
+        return;
+      }
+      const res = response.data;
       setResult(res);
       if (res.status === "successful") {
         setStep("success");
@@ -63,10 +71,10 @@ export function DataPurchaseFlow({
         setStep("pending");
       } else {
         setStep("failed");
-        toast.error(res.failureReason ?? "Purchase failed");
+        toast.error(PURCHASE_FAILED_MESSAGE);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not start purchase");
+    } catch {
+      setError(GENERIC_ERROR_MESSAGE);
       setStep("confirm");
     }
   }
@@ -147,7 +155,7 @@ export function DataPurchaseFlow({
         </div>
         <div className="space-y-1">
           <p className="text-lg font-medium">Couldn&apos;t buy data</p>
-          <p className="text-sm text-muted-foreground">Your wallet was refunded.</p>
+          <p className="text-sm text-muted-foreground">{PURCHASE_FAILED_MESSAGE}</p>
         </div>
         <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:justify-center">
           <Button size="lg" onClick={reset}>Try again</Button>

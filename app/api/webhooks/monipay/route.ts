@@ -1,3 +1,4 @@
+import { reportError } from "@/lib/error-log";
 import { type NextRequest, NextResponse } from "next/server";
 import { verifyMonipaySignature, settleMonipayTransaction } from "@/lib/monipay";
 
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     // Log and let a non-2xx response signal Monipay to retry — in case this was a
     // transient failure (e.g. our database being briefly unreachable).
-    console.error("Monipay webhook processing failed", err);
+    await reportError({ source: "webhook:monipay", error: err, userId: null });
     return NextResponse.json({ error: "Processing failed" }, { status: 500 });
   }
 

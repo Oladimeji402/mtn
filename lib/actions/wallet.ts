@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { initializeMonipayTransaction, settleMonipayTransaction } from "@/lib/monipay";
 import { assertNotRateLimited } from "@/lib/rate-limit";
+import { UserError, type ActionResult } from "@/lib/errors";
+import { runAction } from "@/lib/run-action";
 import { MAX_FUNDING_AMOUNT, MIN_FUNDING_AMOUNT } from "@/lib/constants";
 
 function generateReference() {
@@ -33,16 +35,20 @@ export interface InitiateFundingResult {
  * looks the intent back up by reference so a returning browser can never credit an
  * arbitrary user or amount by tampering with the redirect.
  */
-export async function initiateWalletFundingAction(amount: number): Promise<InitiateFundingResult> {
+export async function initiateWalletFundingAction(amount: number): Promise<ActionResult<InitiateFundingResult>> {
+  return runAction("initiateWalletFunding", () => initiateWalletFunding(amount));
+}
+
+async function initiateWalletFunding(amount: number): Promise<InitiateFundingResult> {
   if (amount < MIN_FUNDING_AMOUNT || amount > MAX_FUNDING_AMOUNT) {
-    throw new Error(`Amount must be between ₦${MIN_FUNDING_AMOUNT} and ₦${MAX_FUNDING_AMOUNT.toLocaleString()}.`);
+    throw new UserError(`Amount must be between ₦${MIN_FUNDING_AMOUNT.toLocaleString()} and ₦${MAX_FUNDING_AMOUNT.toLocaleString()}.`);
   }
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user?.email) throw new Error("Not authenticated");
+  if (!user?.email) throw new UserError("Please log in again to continue.");
 
   await assertNotRateLimited("wallet_funding_initiate", 5, 300);
 
@@ -71,16 +77,19 @@ export async function initiateWalletFundingAction(amount: number): Promise<Initi
 export interface ConfirmFundingResult {
   outcome: "successful" | "failed" | "pending";
   newBalance?: number;
-  reason?: string;
 }
 
 /** Called when the browser lands back on /dashboard/wallet after Monipay's checkout. */
-export async function confirmWalletFundingAction(reference: string): Promise<ConfirmFundingResult> {
+export async function confirmWalletFundingAction(reference: string): Promise<ActionResult<ConfirmFundingResult>> {
+  return runAction("confirmWalletFunding", () => confirmWalletFunding(reference));
+}
+
+async function confirmWalletFunding(reference: string): Promise<ConfirmFundingResult> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
+  if (!user) throw new UserError("Please log in again to continue.");
 
   const admin = createAdminClient();
   const { data: event } = await admin
@@ -92,7 +101,7 @@ export async function confirmWalletFundingAction(reference: string): Promise<Con
 
   const payload = event?.payload as { user_id?: string } | undefined;
   if (!payload || payload.user_id !== user.id) {
-    throw new Error("Invalid payment reference.");
+    throw new UserError("We couldn't find that payment.");
   }
 
   const result = await settleMonipayTransaction(reference);
@@ -112,7 +121,7 @@ export async function confirmWalletFundingAction(reference: string): Promise<Con
     return { outcome: "successful", newBalance: result.newBalance };
   }
   if (result.outcome === "failed") {
-    return { outcome: "failed", reason: result.reason };
+    return { outcome: "failed" };
   }
   return { outcome: "pending" };
 }

@@ -156,6 +156,17 @@ export interface Database {
         processed_at: string | null;
         created_at: string;
       }>;
+      error_log: Table<{
+        id: string;
+        ref: string;
+        source: string;
+        message: string;
+        stack: string | null;
+        user_id: string | null;
+        path: string | null;
+        context: Record<string, unknown>;
+        created_at: string;
+      }>;
       audit_log: Table<{
         id: string;
         actor_id: string | null;

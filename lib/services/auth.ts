@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import type { EmailOtpType } from "@supabase/supabase-js";
+import { GENERIC_ERROR_MESSAGE } from "@/lib/errors";
 import type {
   ForgotPasswordValues,
   LoginValues,
@@ -14,6 +15,7 @@ import type {
  * the session into cookies that Server Components and middleware then read.
  */
 
+/** Known Supabase Auth messages get friendly wording; anything else is generic, never raw. */
 function mapAuthError(message: string): string {
   if (/already registered|already exists/i.test(message)) {
     return "That email is already registered.";
@@ -21,10 +23,22 @@ function mapAuthError(message: string): string {
   if (/invalid login credentials/i.test(message)) {
     return "Incorrect email/username or password.";
   }
-  if (/rate limit/i.test(message)) {
+  if (/rate limit|too many requests|after \d+ seconds/i.test(message)) {
     return "Too many attempts. Try again shortly.";
   }
-  return message;
+  if (/email not confirmed/i.test(message)) {
+    return "Please confirm your email first. Check your inbox for the link.";
+  }
+  if (/different from the old password|same as the old password/i.test(message)) {
+    return "Choose a password you haven't used before.";
+  }
+  if (/password/i.test(message) && /(weak|least|short|characters)/i.test(message)) {
+    return "Please choose a stronger password.";
+  }
+  if (/failed to fetch|network|load failed/i.test(message)) {
+    return "Couldn't reach the server. Check your connection and try again.";
+  }
+  return GENERIC_ERROR_MESSAGE;
 }
 
 export async function signUp(values: SignupValues) {

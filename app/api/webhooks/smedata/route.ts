@@ -1,3 +1,4 @@
+import { reportError } from "@/lib/error-log";
 import { type NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { finalizePurchase } from "@/lib/purchase-fulfillment";
@@ -51,7 +52,7 @@ async function handle(request: NextRequest) {
       });
     }
   } catch (err) {
-    console.error("SMEData webhook processing failed", err);
+    await reportError({ source: "webhook:smedata", error: err, userId: null });
     return NextResponse.json({ error: "Processing failed" }, { status: 500 });
   }
 
