@@ -9,7 +9,6 @@ import {
   type TransactionFilterValue,
 } from "@/components/transactions/transaction-filters";
 import { TransactionStats } from "@/components/transactions/transaction-stats";
-import { TransactionTable } from "@/components/transactions/transaction-table";
 import { TransactionCard } from "@/components/transactions/transaction-card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { screenPadClass } from "@/lib/utils";
@@ -72,8 +71,7 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
         </div>
       ) : (
         <>
-          <TransactionTable transactions={filtered} />
-          <div className="divide-y border-y sm:hidden">
+          <div className="divide-y border-y">
             {filtered.map((t) => (
               <TransactionCard key={t.id} transaction={t} />
             ))}

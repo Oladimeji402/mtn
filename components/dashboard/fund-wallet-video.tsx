@@ -11,7 +11,7 @@ export function FundWalletVideo() {
   const [open, setOpen] = React.useState(false);
 
   return (
-    <div className={`pb-5 lg:hidden ${screenPadClass}`}>
+    <div className={`pb-5 ${screenPadClass}`}>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <button
@@ -21,8 +21,11 @@ export function FundWalletVideo() {
             <span className="absolute left-4 top-4 rounded-full bg-brand px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-brand-foreground">
               New • Watch
             </span>
-            <span className="absolute left-1/2 top-1/2 flex size-16 -translate-x-1/2 -translate-y-[60%] items-center justify-center rounded-full border-4 border-brand/70 bg-white shadow-lg">
-              <Play className="ml-0.5 size-6 fill-destructive text-destructive" />
+            <span className="absolute left-1/2 top-1/2 size-16 -translate-x-1/2 -translate-y-[60%]">
+              <span aria-hidden className="absolute inset-0 animate-ping rounded-full bg-brand/70 motion-reduce:animate-none" />
+              <span className="relative flex size-full items-center justify-center rounded-full bg-white shadow-lg">
+                <Play className="ml-0.5 size-6 fill-destructive text-destructive" />
+              </span>
             </span>
             <span className="relative block text-lg font-bold leading-tight text-white">How to Fund Your Wallet</span>
             <span className="relative block text-xs text-white/80">Quick 30-second guide, tap to play</span>

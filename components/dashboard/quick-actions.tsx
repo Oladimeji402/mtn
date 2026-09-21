@@ -39,7 +39,7 @@ export function DashboardQuickActions() {
   return (
     <nav
       aria-label="Shortcuts"
-      className={cn("grid grid-cols-4 gap-2 py-5 lg:hidden", screenPadClass)}
+      className={cn("grid grid-cols-4 gap-2 py-5", screenPadClass)}
     >
       {tiles.map((tile) => (
         <Link

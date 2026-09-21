@@ -33,7 +33,7 @@ export function ContactActions() {
   }
 
   return (
-    <nav aria-label="Get the app and contact us" className={cn("grid grid-cols-4 gap-2 pb-5 lg:hidden", screenPadClass)}>
+    <nav aria-label="Get the app and contact us" className={cn("grid grid-cols-4 gap-2 pb-5", screenPadClass)}>
       <button type="button" onClick={handleGetApp} className={tileClass}>
         <span className={cn(iconWrapClass, "bg-brand/15 text-brand-foreground")}>
           {isIos && !canPrompt ? <Share className="size-5" /> : <Download className="size-5" />}

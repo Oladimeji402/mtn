@@ -13,7 +13,7 @@ export default function DashboardLoading() {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-2 px-4 py-5 sm:px-0 lg:hidden">
+      <div className="grid grid-cols-4 gap-2 px-4 py-5 sm:px-0">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="flex flex-col items-center gap-2">
             <Skeleton className="size-14 rounded-2xl" />

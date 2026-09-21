@@ -1,15 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ArrowDownLeft, ArrowUpRight, History } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { History } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TransactionStatusBadge } from "@/components/shared/status-badge";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -59,51 +51,7 @@ export function WalletHistoryList({ history }: { history: WalletTransaction[] })
         <EmptyState icon={History} title="No wallet activity" description="Nothing matches this filter yet." />
       ) : (
         <>
-          <div className="hidden overflow-hidden rounded-lg border sm:block">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Reference</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((tx) => (
-                  <TableRow key={tx.id}>
-                    <TableCell className="font-mono text-xs">{tx.reference}</TableCell>
-                    <TableCell>{typeLabel[tx.type]}</TableCell>
-                    <TableCell>
-                      <span
-                        className={cn(
-                          "inline-flex items-center gap-1 font-medium",
-                          tx.direction === "credit" ? "text-success" : "text-foreground",
-                        )}
-                      >
-                        {tx.direction === "credit" ? (
-                          <ArrowDownLeft className="size-3.5" />
-                        ) : (
-                          <ArrowUpRight className="size-3.5" />
-                        )}
-                        {tx.direction === "credit" ? "+" : "-"}
-                        {formatNaira(tx.amount, false)}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <TransactionStatusBadge status={tx.status} />
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {formatDateTime(tx.createdAt)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-
-          <div className="divide-y border-y sm:hidden">
+          <div className="divide-y border-y">
             {filtered.map((tx) => (
               <div key={tx.id} className="min-h-16 px-4 py-3.5">
                 <div className="flex items-start justify-between gap-3">
