@@ -192,7 +192,6 @@ export interface AdminDashboardStats {
   successfulTransactions: number;
   failedTransactions: number;
   pendingTransactions: number;
-  airtimeSalesToday: number;
   dataSalesToday: number;
   walletFundingToday: number;
 }

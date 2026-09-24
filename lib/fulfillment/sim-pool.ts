@@ -3,8 +3,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { finalizePurchase } from "@/lib/purchase-fulfillment";
 import { notifyAdmins } from "@/lib/notify-admins";
 import { reportError } from "@/lib/error-log";
-import { applyFulfillmentResult } from "@/lib/fulfillment/apply";
-import { runMtnTransfer } from "@/lib/fulfillment/mtn-transfer";
 import type { DataFulfillmentProvider, FulfillmentRequest, FulfillmentResult } from "@/lib/fulfillment/types";
 
 /**
@@ -125,15 +123,6 @@ export async function applyJobAction(a: JobAction): Promise<void> {
       // This SIM hit its daily cap or ran out of data — the moment the client described:
       // move on to the next SIM. Excluded = every SIM already tried for this purchase.
       const admin = createAdminClient();
-      const { data: src } = await admin.from("data_sources").select("transport").eq("id", a.source_id).maybeSingle();
-      if (src?.transport === "api") {
-        // API lines have no gateway to pick up a queued job, so send it from here.
-        await applyFulfillmentResult(
-          a.purchase_id,
-          await runMtnTransfer({ purchaseId: a.purchase_id, phone: a.recipient_msisdn, sizeMb: a.amount_mb, exclude: a.excluded }),
-        );
-        return;
-      }
       const { error } = await admin.rpc("fn_sim_allocate", {
         p_purchase_id: a.purchase_id,
         p_amount_mb: a.amount_mb,

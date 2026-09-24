@@ -32,6 +32,6 @@ export type FulfillmentResult =
   | { status: "unknown"; reason: string };
 
 export interface DataFulfillmentProvider {
-  readonly id: "smedata" | "sim" | "mtn_transfer";
+  readonly id: "smedata" | "sim";
   fulfill(request: FulfillmentRequest): Promise<FulfillmentResult>;
 }

@@ -1,7 +1,6 @@
 import "server-only";
 import { smeProvider } from "@/lib/fulfillment/sme";
 import { simPoolProvider } from "@/lib/fulfillment/sim-pool";
-import { mtnTransferProvider } from "@/lib/fulfillment/mtn-transfer";
 import type { DataFulfillmentProvider } from "@/lib/fulfillment/types";
 
 export { applyFulfillmentResult } from "@/lib/fulfillment/apply";
@@ -9,7 +8,6 @@ export { applyFulfillmentResult } from "@/lib/fulfillment/apply";
 const providers: Record<string, DataFulfillmentProvider> = {
   smedata: smeProvider,
   sim: simPoolProvider,
-  mtn_transfer: mtnTransferProvider,
 };
 
 /** VTU.ng is switched off and keeps its original inline path in lib/actions/purchase.ts. */

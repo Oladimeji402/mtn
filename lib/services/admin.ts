@@ -33,9 +33,6 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
     successfulTransactions: purchases.filter((p) => p.status === "successful").length,
     failedTransactions: purchases.filter((p) => p.status === "failed").length,
     pendingTransactions: purchases.filter((p) => p.status === "pending").length,
-    airtimeSalesToday: purchases
-      .filter((p) => p.type === "airtime" && p.status === "successful")
-      .reduce((sum, p) => sum + p.amount, 0),
     dataSalesToday: purchases
       .filter((p) => p.type === "data" && p.status === "successful")
       .reduce((sum, p) => sum + p.amount, 0),

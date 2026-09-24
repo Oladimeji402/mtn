@@ -1,7 +1,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentAdmin } from "@/lib/services/admin";
-import type { FulfillmentJobStatus } from "@/lib/supabase/database.types";
+import type { FulfillmentJobStatus, SimLoginStatus } from "@/lib/supabase/database.types";
 
 /** A SIM counts as "online" while its gateway has reported in within this window. */
 export const ONLINE_WINDOW_SECONDS = 180;
@@ -11,17 +11,31 @@ export interface SimSourceView {
   label: string;
   msisdn: string;
   isActive: boolean;
-  transport: "gateway" | "api";
   online: boolean;
   lastSeenAt: string | null;
-  bundleRemainingMb: number;
+  /** null = not known yet (the gateway reads it from myMTN on the SIM's next order). */
+  bundleRemainingMb: number | null;
+  /** When the gateway last read it; null when typed by an admin. */
+  bundleCheckedAt: string | null;
   dailyLimitMb: number;
   usedTodayMb: number;
   transfersThisMonth: number;
   freeTransfersPerMonth: number;
   lastUsedAt: string | null;
   notes: string | null;
+  /** The latest myMTN login from the admin page: in progress, or finished in the last 15 minutes. */
+  login: SimLoginView | null;
 }
+
+export interface SimLoginView {
+  id: string;
+  status: SimLoginStatus;
+  message: string | null;
+  updatedAt: string;
+}
+
+export const OPEN_LOGIN_STATUSES: SimLoginStatus[] = ["requested", "working", "needs_code", "code_sent"];
+const SHOW_FINISHED_LOGIN_MS = 15 * 60 * 1000;
 
 export interface SimJobView {
   id: string;
@@ -62,30 +76,39 @@ export async function getSimPool(): Promise<{ sources: SimSourceView[]; jobs: Si
   const today = lagosDay(now);
   const month = today.slice(0, 7);
 
-  const [{ data: sources, error }, { data: jobs }] = await Promise.all([
+  await admin.rpc("fn_sim_login_expire");
+  const [{ data: sources, error }, { data: jobs }, { data: logins }] = await Promise.all([
     admin.from("data_sources").select("*").order("label"),
     admin.from("fulfillment_jobs").select("*").order("created_at", { ascending: false }).limit(60),
+    admin.from("sim_logins").select("id, source_id, status, message, updated_at").order("created_at", { ascending: false }).limit(100),
   ]);
+  const loginBySource = new Map<string, SimLoginView>();
+  for (const l of logins ?? []) {
+    if (loginBySource.has(l.source_id)) continue;
+    const open = OPEN_LOGIN_STATUSES.includes(l.status);
+    if (!open && now.getTime() - new Date(l.updated_at).getTime() > SHOW_FINISHED_LOGIN_MS) continue;
+    loginBySource.set(l.source_id, { id: l.id, status: l.status, message: l.message, updatedAt: l.updated_at });
+  }
   if (error) throw new Error(`Failed to load SIM pool: ${error.message}`);
 
   const views: SimSourceView[] = (sources ?? []).map((s) => {
-    // MTN-API lines have no machine to check in; they are "online" whenever they are switched on.
-    const online = s.transport === "api" || (!!s.last_seen_at && now.getTime() - new Date(s.last_seen_at).getTime() < ONLINE_WINDOW_SECONDS * 1000);
+    const online = !!s.last_seen_at && now.getTime() - new Date(s.last_seen_at).getTime() < ONLINE_WINDOW_SECONDS * 1000;
     return {
       id: s.id,
       label: s.label,
       msisdn: s.msisdn,
       isActive: s.is_active,
-      transport: s.transport,
       online,
       lastSeenAt: s.last_seen_at,
       bundleRemainingMb: s.bundle_remaining_mb,
+      bundleCheckedAt: s.bundle_checked_at,
       dailyLimitMb: s.daily_limit_mb,
       usedTodayMb: s.usage_day === today ? s.transferred_today_mb : 0,
       transfersThisMonth: s.usage_month === month ? s.transfers_this_month : 0,
       freeTransfersPerMonth: s.free_transfers_per_month,
       lastUsedAt: s.last_used_at,
       notes: s.notes,
+      login: loginBySource.get(s.id) ?? null,
     };
   });
 
@@ -120,7 +143,7 @@ export async function getSimPool(): Promise<{ sources: SimSourceView[]; jobs: Si
       online: views.filter((v) => v.online).length,
       activeOnline: usable.length,
       capacityTodayMb: usable.reduce(
-        (sum, v) => sum + Math.max(0, Math.min(v.dailyLimitMb - v.usedTodayMb, v.bundleRemainingMb)),
+        (sum, v) => sum + Math.max(0, Math.min(v.dailyLimitMb - v.usedTodayMb, v.bundleRemainingMb ?? Infinity)),
         0,
       ),
       queued: jobViews.filter((j) => j.status === "queued" || j.status === "claimed").length,

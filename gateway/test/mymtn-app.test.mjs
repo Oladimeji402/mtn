@@ -174,6 +174,7 @@ test("app: a verified success screen is 'success', and Share is tapped exactly o
   assert.equal(r.outcome, "success");
   assert.equal(phone.s.shareTaps, 1);
   assert.equal(phone.s.user, 10, "switched to the SIM's own profile");
+  assert.equal(r.balanceMb, 6 * 1024 - 5 * 1024, "reports what's left after the share");
 });
 test("app: a success screen naming a different recipient is NOT a success", async () => {
   const phone = fakePhone({ result: "mismatch" });
@@ -218,6 +219,7 @@ test("app: not enough data (keeping MTN's 100MB) -> insufficient_bundle without 
   const phone = fakePhone({ balance: "5 GB" }); // 5120MB < 5120 + 100
   const r = await driverFor(phone).transfer(order);
   assert.equal(r.outcome, "insufficient_bundle");
+  assert.equal(r.balanceMb, 5120, "reports the balance it saw");
   assert.equal(phone.s.shareTaps, 0);
 });
 test("app: a greyed-out amount tile -> insufficient_bundle without tapping Share", async () => {
@@ -305,7 +307,7 @@ test("run: a not-sent error is reported as 'not_sent' so the server can move the
 test("run: an outcome decided by the driver is used as-is", async () => {
   const c = loadConfig({ SERVER_URL: "https://x.test", GATEWAY_TOKEN: "t".repeat(30), STATE_DIR: fs.mkdtempSync(path.join(os.tmpdir(), "gw-")) });
   const reports = [];
-  const driver = { name: "app", transfer: async () => ({ outcome: "success", replyText: "Successful | …" }) };
-  await handleJob({ job: { id: "j1", ...order }, config: c, driver, api: { report: async (id, outcome) => reports.push(outcome) }, state: createState(c.stateDir), log: () => {} });
-  assert.deepEqual(reports, ["success"]);
+  const driver = { name: "app", transfer: async () => ({ outcome: "success", replyText: "Successful | …", balanceMb: 900 }) };
+  await handleJob({ job: { id: "j1", ...order }, config: c, driver, api: { report: async (id, outcome, message, balanceMb) => reports.push([outcome, balanceMb]) }, state: createState(c.stateDir), log: () => {} });
+  assert.deepEqual(reports, [["success", 900]]);
 });

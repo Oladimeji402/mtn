@@ -20,6 +20,11 @@ export async function POST(request: NextRequest) {
   const jobId = body?.jobId;
   const outcome = body?.outcome;
   const message = typeof body?.message === "string" ? body.message.slice(0, 500) : null;
+  // The SIM's data left as the gateway read it in myMTN (after the share, for a success).
+  const balanceMb =
+    typeof body?.balanceMb === "number" && Number.isFinite(body.balanceMb) && body.balanceMb >= 0 && body.balanceMb < 10_000_000
+      ? Math.floor(body.balanceMb)
+      : null;
   if (typeof jobId !== "string" || !UUID.test(jobId) || typeof outcome !== "string" || !OUTCOMES.has(outcome)) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
@@ -39,6 +44,14 @@ export async function POST(request: NextRequest) {
 
     const row = data?.[0];
     if (!row) return NextResponse.json({ error: "Job not found" }, { status: 404 });
+
+    // After fn_sim_report, so a real reading replaces its guesses (e.g. "no data" -> 0).
+    if (balanceMb !== null && row.action !== "noop") {
+      await admin
+        .from("data_sources")
+        .update({ bundle_remaining_mb: balanceMb, bundle_checked_at: new Date().toISOString() })
+        .eq("id", row.source_id);
+    }
 
     await applyJobAction({ ...row, jobId });
     return NextResponse.json({ ok: true, action: row.action });

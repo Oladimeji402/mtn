@@ -17,6 +17,7 @@ export type WalletTxDirection = "credit" | "debit";
 export type PurchaseType = "airtime" | "data";
 export type PlanCategory = "daily" | "weekly" | "monthly";
 export type FulfillmentJobStatus = "queued" | "claimed" | "succeeded" | "failed" | "unknown" | "cancelled";
+export type SimLoginStatus = "requested" | "working" | "needs_code" | "code_sent" | "succeeded" | "failed" | "cancelled" | "expired";
 export type AdminRole = "owner" | "admin" | "support";
 export type NotificationTypeDb =
   | "airtime_success"
@@ -175,7 +176,8 @@ export interface Database {
         label: string;
         msisdn: string;
         is_active: boolean;
-        bundle_remaining_mb: number;
+        bundle_remaining_mb: number | null;
+        bundle_checked_at: string | null;
         min_reserve_mb: number;
         daily_limit_mb: number;
         free_transfers_per_month: number;
@@ -188,6 +190,18 @@ export interface Database {
         gateway_id: string | null;
         transport: "gateway" | "api";
         notes: string | null;
+        created_at: string;
+        updated_at: string;
+      }>;
+      sim_logins: Table<{
+        id: string;
+        source_id: string;
+        msisdn: string;
+        status: SimLoginStatus;
+        code: string | null;
+        message: string | null;
+        gateway_id: string | null;
+        requested_by: string | null;
         created_at: string;
         updated_at: string;
       }>;
@@ -305,6 +319,18 @@ export interface Database {
           amount_mb: number;
           excluded: string[];
         }[];
+      };
+      fn_sim_login_expire: {
+        Args: Record<string, never>;
+        Returns: undefined;
+      };
+      fn_sim_login_claim: {
+        Args: { p_gateway: string };
+        Returns: { login_id: string; msisdn: string }[];
+      };
+      fn_sim_login_take_code: {
+        Args: { p_login_id: string };
+        Returns: { status: SimLoginStatus; code: string | null }[];
       };
       fn_sim_sweep: {
         Args: { p_queue_timeout_seconds?: number };

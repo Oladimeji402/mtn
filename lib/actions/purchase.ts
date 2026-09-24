@@ -8,7 +8,6 @@ import { mapVtuOrderOutcome, purchaseMtnData as purchaseVtuData, requeryVtuOrder
 import { requerySmeOrder } from "@/lib/smedata";
 import { getProvider, applyFulfillmentResult } from "@/lib/fulfillment";
 import { reconcileSimPurchase } from "@/lib/fulfillment/sim-pool";
-import { reconcileMtnPurchase } from "@/lib/fulfillment/mtn-transfer";
 import type { FulfillmentResult } from "@/lib/fulfillment/types";
 import { notifyAdmins } from "@/lib/notify-admins";
 import { assertNotRateLimited } from "@/lib/rate-limit";
@@ -176,19 +175,19 @@ async function requeryPurchase(purchaseId: string): Promise<Transaction> {
   if (!purchase || purchase.user_id !== user.id) throw new UserError("We couldn't find that purchase.");
 
   if (purchase.status === "processing") {
-    let provider: "vtu" | "smedata" | "sim" | "mtn_transfer" = "vtu";
+    let provider: "vtu" | "smedata" | "sim" = "vtu";
     if (purchase.data_plan_id) {
       const { data: plan } = await admin
         .from("data_plans")
         .select("provider")
         .eq("id", purchase.data_plan_id)
         .maybeSingle();
-      if (plan?.provider === "smedata" || plan?.provider === "sim" || plan?.provider === "mtn_transfer") provider = plan.provider;
+      if (plan?.provider === "smedata" || plan?.provider === "sim") provider = plan.provider;
+      // The MTN API route was removed; its orders (if any) live in the same SIM-pool tables.
+      if (plan?.provider === "mtn_transfer") provider = "sim";
     }
 
-    if (provider === "mtn_transfer") {
-      await reconcileMtnPurchase(purchase.id);
-    } else if (provider === "sim") {
+    if (provider === "sim") {
       await reconcileSimPurchase(purchase.id);
     } else if (provider === "smedata") {
       if (purchase.provider_reference) {

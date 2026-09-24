@@ -11,11 +11,11 @@ export function effectivePatterns(config, driver) {
 }
 
 /** The result must reach the server, or the order stays stuck. Retries with backoff. */
-async function reportWithRetry(api, log, jobId, outcome, message, sleepFn = sleep, attempts = 20) {
+async function reportWithRetry(api, log, jobId, outcome, message, sleepFn = sleep, attempts = 20, balanceMb) {
   let delay = 1000;
   for (let i = 1; i <= attempts; i++) {
     try {
-      await api.report(jobId, outcome, message);
+      await api.report(jobId, outcome, message, balanceMb);
       return true;
     } catch (err) {
       log(`report ${jobId} failed (attempt ${i}/${attempts}): ${err.message}`);
@@ -34,6 +34,7 @@ export async function handleJob({ job, config, driver, api, state, log, sleepFn 
 
   let outcome;
   let message;
+  let balanceMb;
   try {
     const result = await driver.transfer({
       jobId: job.id,
@@ -47,6 +48,7 @@ export async function handleJob({ job, config, driver, api, state, log, sleepFn 
     // reply text is matched against the configured patterns.
     outcome = DRIVER_OUTCOMES.has(result.outcome) ? result.outcome : classify(result.replyText, effectivePatterns(config, driver));
     message = String(result.replyText).slice(0, 300);
+    if (Number.isFinite(result.balanceMb)) balanceMb = result.balanceMb;
   } catch (err) {
     if (err.notSent) {
       // The driver guarantees nothing was sent (it never reached the send step), so the
@@ -62,7 +64,7 @@ export async function handleJob({ job, config, driver, api, state, log, sleepFn 
   }
 
   log(`job ${job.id}: ${job.sourceMsisdn} -> ${job.recipientMsisdn} ${job.amountMb}MB => ${outcome}`);
-  const delivered = await reportWithRetry(api, log, job.id, outcome, message, sleepFn);
+  const delivered = await reportWithRetry(api, log, job.id, outcome, message, sleepFn, 20, balanceMb);
   // If the server never heard back, keep the marker so the next start reports "unknown".
   if (delivered) state.clear();
 }

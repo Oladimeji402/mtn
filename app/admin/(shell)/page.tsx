@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import {
   CheckCircle2,
   Clock,
-  Smartphone,
   UserCheck,
   Users,
   Wallet,
@@ -28,7 +27,7 @@ export default async function AdminDashboardPage() {
     <div className="space-y-6">
       <PageHeader title="Dashboard" />
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <AdminStatCard label="Total users" value={String(stats.totalUsers)} icon={Users} />
         <AdminStatCard
           label="Active users"
@@ -58,11 +57,6 @@ export default async function AdminDashboardPage() {
           value={String(stats.pendingTransactions)}
           icon={Clock}
           tone="warning"
-        />
-        <AdminStatCard
-          label="Airtime sales today"
-          value={formatNaira(stats.airtimeSalesToday, false)}
-          icon={Smartphone}
         />
         <AdminStatCard
           label="Data sales today"

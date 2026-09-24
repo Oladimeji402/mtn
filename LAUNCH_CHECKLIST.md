@@ -497,17 +497,12 @@ gateway machine; add the real SIM numbers in Admin > SIMs; run one real transfer
   connected; future pushes to `main` auto-deploy. If the live site ever looks stale again,
   check Project Settings → Git in the Vercel dashboard before assuming a build failure.
 
-## Data source: MTN official Customer Data Transfer API (built, inactive)
+## Data source: the client's SIMs through the myMTN app (gateway)
 
-Moves data out of the client's own MTN bundles with no phone/modem/gateway. Code: `lib/mtn-transfer.ts`,
-`lib/fulfillment/mtn-transfer.ts`, webhook `app/api/webhooks/mtn-transfer`. Plan `mtn-5gb-transfer` exists but is
-INACTIVE; lines are added in Admin → SIMs with "How data is sent = MTN official API".
+The MTN official Customer Data Transfer API route was built and then removed (2026-09-24, client decision);
+its inactive plan `mtn-5gb-transfer` is hidden from customers and the `data_sources.transport` column is unused.
+The live route is the gateway's myMTN app driver: see `gateway/README.md`.
 
-Tested: request/response handling and status classification against a local mock built from MTN's OpenAPI spec;
-DB allocation/begin/report for API lines. NOT tested against real MTN.
-
-Blocked on MTN answers (do not activate until known):
-- [ ] Can the client's personal SIMs be senders (sender enrolment / consent per transfer)? Is a `pin` required (we never store one)?
-- [ ] Values for `MTN_TRANSFER_TARGET_SYSTEM`, the `transferAmount` unit (`MTN_TRANSFER_AMOUNT_UNIT`) and `transactionState` words (`MTN_*_STATES`).
-- [ ] Fees per transfer, sandbox access, and whether her cheap "special" bundles can be transferred.
-- [ ] Set `MTN_CONSUMER_KEY/SECRET` (+ `MTN_CALLBACK_URL`) in Vercel, do one real small transfer, then set the real price and switch off the SMEData 5GB plan.
+- [ ] Gateway server running (Android + myMTN, one profile per SIM), `GATEWAY_API_TOKEN` set in Vercel and the gateway.
+- [ ] Each SIM added in Admin → SIMs and logged in to myMTN ("Log in to myMTN" on the SIM).
+- [ ] One dry run (`MYMTN_DRY_RUN=1`), then one real order end to end, before activating `mtn-5gb-sim`.

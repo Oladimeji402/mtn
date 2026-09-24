@@ -319,6 +319,7 @@ export function createMyMtnAppDriver(config, deps = {}) {
     const deadline = now() + t.prep;
     let nodes;
     let shareButton;
+    let balance = null; // MB, as myMTN showed it on the Share Data screen
     try {
       nodes = await openAsSim(sourceMsisdn, deadline);
       await tapLabel(nodes, "Share");
@@ -337,17 +338,19 @@ export function createMyMtnAppDriver(config, deps = {}) {
       if (!nodes.some((n) => digits(n.text) === sourceMsisdn)) throw new NotSentError("WRONG_ACCOUNT", `Share Data is not sending from ${sourceMsisdn}`);
 
       // Data left must cover the share plus the 100MB MTN makes you keep.
-      const balance = nodes.map((n) => parseBalanceMb(n.text)).find((v) => v != null);
+      balance = nodes.map((n) => parseBalanceMb(n.text)).find((v) => v != null) ?? null;
       const short = balance != null && balance < labelMb(label) + 100;
       if (short && !dryRun) {
-        return { outcome: "insufficient_bundle", replyText: `Not sent: ${sourceMsisdn} has ${balance}MB, needs ${labelMb(label) + 100}MB` };
+        return { outcome: "insufficient_bundle", balanceMb: balance, replyText: `Not sent: ${sourceMsisdn} has ${balance}MB, needs ${labelMb(label) + 100}MB` };
       }
 
       nodes = await typeRecipient(nodes, recipientMsisdn);
       await tapLabel(nodes, "Choose Data Amount");
       ({ nodes } = await expect((n) => n.find((x) => x.desc === label), "Amount picker", deadline));
       const tile = nodes.find((n) => n.desc === label);
-      if (!tile.enabled && !dryRun) return { outcome: "insufficient_bundle", replyText: `Not sent: myMTN greys out ${label} for ${sourceMsisdn}` };
+      if (!tile.enabled && !dryRun) {
+        return { outcome: "insufficient_bundle", balanceMb: balance ?? undefined, replyText: `Not sent: myMTN greys out ${label} for ${sourceMsisdn}` };
+      }
       await tap(tile);
 
       // Last look before the one irreversible tap.
@@ -391,7 +394,9 @@ export function createMyMtnAppDriver(config, deps = {}) {
           const joined = all.join(" | ");
           const ok = all.some((s) => digits(s).endsWith(sourceMsisdn)) && all.some((s) => digits(s).endsWith(recipientMsisdn)) && all.includes(label);
           if (!ok) await screenshot(`${jobId}-success-mismatch`);
-          return ok ? { outcome: "success", replyText: joined } : { replyText: `Success screen did not match the order: ${joined}` };
+          if (!ok) return { replyText: `Success screen did not match the order: ${joined}` };
+          // What's left after this share, so the website's "data left" stays current by itself.
+          return { outcome: "success", replyText: joined, balanceMb: balance == null ? undefined : Math.max(0, Math.floor(balance - labelMb(label))) };
         }
         // Finished on some other screen: the picker has closed and the screen has settled.
         const pickerOpen = n.some((x) => Object.values(AMOUNT_LABELS).includes(x.desc));

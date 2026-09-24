@@ -55,7 +55,7 @@ picks the profile up within about 30 minutes; restart it to pick it up at once.
 ### When a SIM is logged out
 
 The gateway stops offering that SIM and the admins get a notification ("SIM … stopped taking orders"). Log
-the profile back in; the next check (within 30 minutes) brings it back and says so.
+the profile back in (from Admin > SIMs once the gateway side of "Log in" is built); the next check (within 30 minutes) brings it back and says so.
 
 ### Settings (in `.env`)
 
@@ -132,7 +132,8 @@ the endpoints reject everyone if the website's `GATEWAY_API_TOKEN` is unset or s
 |---|---|---|
 | `heartbeat` | `{ gatewayId, liveSims: ["0803…"], alerts?: [{ msisdn, reason }] }` | `{ ok, known }`. Marks those SIMs online (for 3 minutes) and runs housekeeping. |
 | `claim` | `{ gatewayId, liveSims }` | `{ job: null }` or `{ job: { id, sourceMsisdn, recipientMsisdn, amountMb } }`. Leases the job for 5 minutes. |
-| `report` | `{ jobId, outcome, message? }` | `{ ok, action }`. `outcome` is `success`, `failed`, `limit_reached`, `insufficient_bundle`, `not_sent` or `unknown`. Repeating a report is harmless. |
+| `report` | `{ jobId, outcome, message?, balanceMb? }` | `{ ok, action }`. `outcome` is `success`, `failed`, `limit_reached`, `insufficient_bundle`, `not_sent` or `unknown`. Repeating a report is harmless. |
+| `login` | `{ gatewayId, action: "next" \| "update" \| "code", id?, status?, message? }` | Logging a SIM in to myMTN from Admin > SIMs: `next` hands out a waiting login; `update` reports `working`, `needs_code`, `succeeded` or `failed`; `code` hands over the code the admin typed, once. The gateway side of this is not built yet. |
 
 What the website does with each outcome:
 

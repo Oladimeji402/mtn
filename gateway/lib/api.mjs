@@ -20,6 +20,6 @@ export function createApi(config, fetchImpl = fetch) {
   return {
     heartbeat: (liveSims, alerts = []) => post("heartbeat", { gatewayId: config.gatewayId, liveSims, alerts }),
     claim: (liveSims) => post("claim", { gatewayId: config.gatewayId, liveSims }),
-    report: (jobId, outcome, message) => post("report", { jobId, outcome, message }),
+    report: (jobId, outcome, message, balanceMb) => post("report", { jobId, outcome, message, ...(balanceMb != null ? { balanceMb } : {}) }),
   };
 }

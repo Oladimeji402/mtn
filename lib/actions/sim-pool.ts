@@ -10,9 +10,9 @@ const saveSchema = z.object({
   id: z.string().uuid().optional(),
   label: z.string().trim().min(1, "Give the SIM a name").max(40),
   msisdn: z.string().trim().regex(/^0\d{10}$/, "Enter the SIM's 11-digit number"),
-  bundleRemainingMb: z.number().int().min(0).max(1_000_000),
+  // undefined = leave as it is; null = not known (the gateway will read it)
+  bundleRemainingMb: z.number().int().min(0).max(1_000_000).nullable().optional(),
   dailyLimitMb: z.number().int().min(100).max(1_000_000),
-  transport: z.enum(["gateway", "api"]),
   isActive: z.boolean(),
   notes: z.string().trim().max(200).optional(),
 });
@@ -31,9 +31,9 @@ export async function saveSimAction(input: SaveSimInput): Promise<ActionResult<{
     const row = {
       label: v.label,
       msisdn: v.msisdn,
-      bundle_remaining_mb: v.bundleRemainingMb,
+      // A typed figure replaces the gateway's reading until the next order reads it again.
+      ...(v.bundleRemainingMb !== undefined ? { bundle_remaining_mb: v.bundleRemainingMb, bundle_checked_at: null } : {}),
       daily_limit_mb: v.dailyLimitMb,
-      transport: v.transport,
       is_active: v.isActive,
       notes: v.notes || null,
       updated_at: new Date().toISOString(),

@@ -12,7 +12,7 @@ export default async function AdminSimsPage() {
     <div className="space-y-6">
       <PageHeader
         title="SIMs"
-        description="The MTN SIMs that supply data for SIM plans. An order uses one SIM, and when it hits its daily limit or runs out of data the next order moves to another."
+        description="MTN SIMs used to fulfill data orders. The system automatically switches to the next available SIM when a limit is reached."
       />
       <AdminSimPool sources={sources} jobs={jobs} summary={summary} />
     </div>
