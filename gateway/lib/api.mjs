@@ -3,7 +3,12 @@ export function createApi(config, fetchImpl = fetch) {
   async function post(path, body, timeoutMs = 20000) {
     const res = await fetchImpl(`${config.serverUrl}/api/gateway/${path}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${config.token}` },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${config.token}`,
+        // Vercel preview deployments sit behind Vercel's login; this is its bypass for automation.
+        ...(config.env?.VERCEL_PROTECTION_BYPASS ? { "x-vercel-protection-bypass": config.env.VERCEL_PROTECTION_BYPASS } : {}),
+      },
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(timeoutMs),
     });
