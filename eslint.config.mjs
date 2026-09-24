@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Standalone Node program with its own tests (gateway/test), not part of the Next app.
+    "gateway/**",
   ]),
 ]);
 

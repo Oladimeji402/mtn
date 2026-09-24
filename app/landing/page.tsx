@@ -125,13 +125,13 @@ export default function HomePage() {
             </div>
             <div className="mt-4 space-y-2 border-t pt-4">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">MTN Data — 1GB</span>
+                <span className="text-muted-foreground">MTN Data — 5GB</span>
                 <span className="inline-flex items-center gap-1 font-medium text-success">
                   <CircleCheckBig className="size-3.5" /> Successful
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">MTN Data — 3GB</span>
+                <span className="text-muted-foreground">MTN Data — 5GB</span>
                 <span className="inline-flex items-center gap-1 font-medium text-success">
                   <CircleCheckBig className="size-3.5" /> Successful
                 </span>

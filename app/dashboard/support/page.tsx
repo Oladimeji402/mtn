@@ -22,7 +22,7 @@ const faqs = [
   },
   {
     q: "Which data plans can I buy?",
-    a: "Plans range from 1GB to 5GB, all valid for 30 days.",
+    a: "We sell 5GB of MTN data, valid for 30 days.",
   },
 ];
 

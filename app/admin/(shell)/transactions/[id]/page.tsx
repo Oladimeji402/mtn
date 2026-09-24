@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { TransactionStatusBadge } from "@/components/shared/status-badge";
+import { AdminResolveOrder } from "@/components/admin/admin-resolve-order";
 import { formatDate, formatNaira, formatPhoneNumber, formatTime } from "@/lib/format";
 import { getAdminTransaction } from "@/lib/services/transactions";
 
@@ -69,6 +70,18 @@ export default async function AdminTransactionDetailPage({
           ) : null}
         </dl>
       </div>
+
+      {transaction.status === "processing" ? (
+        <div className="space-y-3 rounded-xl border border-warning/40 bg-warning/5 p-5 sm:p-6">
+          <div>
+            <p className="text-sm font-medium">This order is still processing</p>
+            <p className="text-sm text-muted-foreground">
+              If it has been stuck a while, check whether the customer really received the data, then settle it here.
+            </p>
+          </div>
+          <AdminResolveOrder purchaseId={transaction.id} />
+        </div>
+      ) : null}
     </div>
   );
 }

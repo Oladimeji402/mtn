@@ -36,6 +36,9 @@ export function DataPurchaseFlow({
   const [plan, setPlan] = React.useState<DataPlan | null>(null);
   const [result, setResult] = React.useState<Transaction | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  // One key per purchase attempt: a repeat of the same attempt (double tap, retry after a network
+  // blip) returns the original purchase instead of charging the wallet again.
+  const attempt = React.useRef<{ key: string; signature: string } | null>(null);
 
   function handleContinue() {
     const digits = phoneNumber.replace(/\s/g, "");
@@ -57,13 +60,17 @@ export function DataPurchaseFlow({
     setStep("processing");
     setError(null);
     try {
-      const response = await purchaseDataAction({ phoneNumber, dataPlanId: plan.id });
+      // Bound to this exact number and plan, so changing either starts a fresh attempt.
+      const signature = `${phoneNumber}|${plan.id}`;
+      if (attempt.current?.signature !== signature) attempt.current = { key: crypto.randomUUID(), signature };
+      const response = await purchaseDataAction({ phoneNumber, dataPlanId: plan.id, idempotencyKey: attempt.current.key });
       if (!response.ok) {
         setError(errorText(response));
         setStep("confirm");
         return;
       }
       const res = response.data;
+      attempt.current = null;
       setResult(res);
       if (res.status === "successful") {
         setStep("success");
@@ -80,6 +87,7 @@ export function DataPurchaseFlow({
   }
 
   function reset() {
+    attempt.current = null;
     setStep("form");
     setPhoneNumber("");
     setPlan(null);

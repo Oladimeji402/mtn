@@ -1,4 +1,6 @@
+import { mtnConfigured } from "@/lib/mtn-transfer";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { DataPlan } from "@/types";
 
 function toDataPlan(row: {
@@ -10,7 +12,7 @@ function toDataPlan(row: {
   price: number;
   category: "daily" | "weekly" | "monthly";
   popular: boolean;
-}): DataPlan {
+}, available = true): DataPlan {
   return {
     id: row.id,
     network: "MTN",
@@ -21,6 +23,7 @@ function toDataPlan(row: {
     price: row.price,
     category: row.category,
     popular: row.popular,
+    available,
   };
 }
 
@@ -28,12 +31,36 @@ export async function getDataPlans(): Promise<DataPlan[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("data_plans")
-    .select("id, network, size, size_in_mb, validity_days, price, category, popular")
+    .select("id, network, size, size_in_mb, validity_days, price, category, popular, provider")
     .eq("active", true)
     .order("size_in_mb", { ascending: true });
 
   if (error) throw new Error(error.message);
-  return (data ?? []).map(toDataPlan);
+  const rows = data ?? [];
+
+  // SIM-pool plans depend on live capacity (a SIM online with daily allowance and data left).
+  // Checked with the service role because the pool functions are not exposed to customers.
+  // SIM / MTN-transfer plans depend on live capacity (a line with daily allowance and data left;
+  // for the gateway, also online). Checked with the service role: the functions aren't exposed.
+  const poolKey = (r: { provider: string; size_in_mb: number }) => `${r.provider}:${r.size_in_mb}`;
+  const poolPlans = rows.filter((r) => r.provider === "sim" || r.provider === "mtn_transfer");
+  const capacity = new Map<string, boolean>();
+  if (poolPlans.length) {
+    const admin = createAdminClient();
+    const keys = new Map(poolPlans.map((r) => [poolKey(r), r]));
+    await Promise.all(
+      [...keys.entries()].map(async ([key, r]) => {
+        if (r.provider === "mtn_transfer" && !mtnConfigured()) return void capacity.set(key, false);
+        const { data: ok } = await admin.rpc("fn_sim_capacity", {
+          p_amount_mb: r.size_in_mb,
+          p_transport: r.provider === "mtn_transfer" ? "api" : "gateway",
+        });
+        capacity.set(key, ok === true);
+      }),
+    );
+  }
+
+  return rows.map((r) => toDataPlan(r, r.provider === "sim" || r.provider === "mtn_transfer" ? (capacity.get(poolKey(r)) ?? false) : true));
 }
 
 export async function getDataPlan(id: string): Promise<DataPlan | null> {

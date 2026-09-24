@@ -16,6 +16,7 @@ export type WalletTxType = "funding" | "airtime" | "data" | "refund" | "adjustme
 export type WalletTxDirection = "credit" | "debit";
 export type PurchaseType = "airtime" | "data";
 export type PlanCategory = "daily" | "weekly" | "monthly";
+export type FulfillmentJobStatus = "queued" | "claimed" | "succeeded" | "failed" | "unknown" | "cancelled";
 export type AdminRole = "owner" | "admin" | "support";
 export type NotificationTypeDb =
   | "airtime_success"
@@ -29,7 +30,9 @@ export type NotificationTypeDb =
   | "security"
   | "vtu_balance_low"
   | "sme_balance_low"
-  | "plan_price_drift";
+  | "plan_price_drift"
+  | "sim_pool_alert"
+  | "order_needs_review";
 
 type Relationship = {
   foreignKeyName: string;
@@ -167,6 +170,45 @@ export interface Database {
         context: Record<string, unknown>;
         created_at: string;
       }>;
+      data_sources: Table<{
+        id: string;
+        label: string;
+        msisdn: string;
+        is_active: boolean;
+        bundle_remaining_mb: number;
+        min_reserve_mb: number;
+        daily_limit_mb: number;
+        free_transfers_per_month: number;
+        usage_day: string | null;
+        transferred_today_mb: number;
+        usage_month: string | null;
+        transfers_this_month: number;
+        last_used_at: string | null;
+        last_seen_at: string | null;
+        gateway_id: string | null;
+        transport: "gateway" | "api";
+        notes: string | null;
+        created_at: string;
+        updated_at: string;
+      }>;
+      fulfillment_jobs: Table<{
+        id: string;
+        purchase_id: string;
+        attempt: number;
+        source_id: string;
+        recipient_msisdn: string;
+        amount_mb: number;
+        status: FulfillmentJobStatus;
+        claimed_by: string | null;
+        claimed_at: string | null;
+        lease_expires_at: string | null;
+        result_code: string | null;
+        result_message: string | null;
+        released: boolean;
+        external_ref: string | null;
+        created_at: string;
+        updated_at: string;
+      }>;
       audit_log: Table<{
         id: string;
         actor_id: string | null;
@@ -229,6 +271,44 @@ export interface Database {
           daily_used_mb: number;
           monthly_used_mb: number;
         }[];
+      };
+      fn_sim_allocate: {
+        Args: { p_purchase_id: string; p_amount_mb: number; p_recipient: string; p_exclude?: string[]; p_online_seconds?: number; p_transport?: string };
+        Returns: Database["public"]["Tables"]["fulfillment_jobs"]["Row"];
+      };
+      fn_sim_capacity: {
+        Args: { p_amount_mb: number; p_online_seconds?: number; p_transport?: string };
+        Returns: boolean;
+      };
+      fn_sim_begin: {
+        Args: { p_job_id: string; p_actor: string; p_external_ref: string; p_lease_seconds?: number };
+        Returns: boolean;
+      };
+      fn_sim_claim: {
+        Args: { p_gateway: string; p_live: string[]; p_lease_seconds?: number };
+        Returns: {
+          job_id: string;
+          purchase_id: string;
+          source_msisdn: string;
+          recipient_msisdn: string;
+          amount_mb: number;
+          attempt: number;
+        }[];
+      };
+      fn_sim_report: {
+        Args: { p_job_id: string; p_outcome: string; p_code?: string | null; p_message?: string | null };
+        Returns: {
+          purchase_id: string;
+          source_id: string;
+          action: string;
+          recipient_msisdn: string;
+          amount_mb: number;
+          excluded: string[];
+        }[];
+      };
+      fn_sim_sweep: {
+        Args: { p_queue_timeout_seconds?: number };
+        Returns: { purchase_id: string; job_id: string; source_id: string; kind: string }[];
       };
       fn_check_rate_limit: {
         Args: { p_action: string; p_max_attempts: number; p_window_seconds: number };
