@@ -13,7 +13,7 @@ const faqs = [
     a: "Usually within a minute. Pending items show in wallet history.",
   },
   {
-    q: "What if my airtime or data doesn't arrive?",
+    q: "What if my data doesn't arrive?",
     a: "Failed purchases are refunded automatically.",
   },
   {
@@ -21,8 +21,8 @@ const faqs = [
     a: "Yes. You can buy for any MTN number.",
   },
   {
-    q: "Is there a data purchase limit?",
-    a: "Each purchase is capped at 5GB.",
+    q: "Which data plans can I buy?",
+    a: "We sell 5GB of MTN data, valid for 30 days.",
   },
 ];
 

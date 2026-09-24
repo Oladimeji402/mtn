@@ -10,7 +10,7 @@ export function PublicFooter() {
           <div className="space-y-3">
             <Logo href="/landing" />
             <p className="max-w-xs text-sm text-muted-foreground">
-              Buy MTN airtime and data.
+              Buy MTN data.
             </p>
           </div>
 
@@ -40,7 +40,7 @@ export function PublicFooter() {
 
         <div className="mt-10 flex flex-col gap-2 border-t pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>&copy; {new Date().getFullYear()} {APP_NAME}. All rights reserved.</p>
-          <p>{APP_NAME} is an independent airtime and data reseller and is not affiliated with MTN Nigeria.</p>
+          <p>{APP_NAME} is an independent data reseller and is not affiliated with MTN Nigeria.</p>
         </div>
       </div>
     </footer>

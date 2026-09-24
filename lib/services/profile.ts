@@ -18,7 +18,7 @@ export async function updateOwnProfile(userId: string, values: { username: strin
     if (error.message.includes("duplicate key")) {
       throw new Error("That username is already taken.");
     }
-    throw new Error(error.message);
+    throw new Error("Could not save your changes. Please try again.");
   }
   return { success: true as const };
 }

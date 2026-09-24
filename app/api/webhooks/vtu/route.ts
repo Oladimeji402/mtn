@@ -1,3 +1,4 @@
+import { reportError } from "@/lib/error-log";
 import { type NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { finalizePurchase } from "@/lib/purchase-fulfillment";
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
       failureReason: outcome === "failed" ? `VTU order ${payload.status}` : null,
     });
   } catch (err) {
-    console.error("VTU webhook processing failed", err);
+    await reportError({ source: "webhook:vtu", error: err, userId: null });
     return NextResponse.json({ error: "Processing failed" }, { status: 500 });
   }
 

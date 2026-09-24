@@ -62,7 +62,9 @@ async function smeFetch(path: string, params: Record<string, string>): Promise<S
   url.searchParams.set("token", token());
   for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
 
-  const res = await fetch(url, { cache: "no-store" });
+  // A hung request must not hold a Server Action open until the platform kills it. A timeout
+  // throws, and a throw here is treated as "unknown outcome" (see lib/fulfillment/sme.ts).
+  const res = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(25_000) });
   const json = (await res.json().catch(() => null)) as SmeOrderResponse | null;
 
   if (!json || !json.code) {

@@ -82,6 +82,8 @@ export interface DataPlan {
   price: number;
   category: "daily" | "weekly" | "monthly";
   popular?: boolean;
+  /** False when the plan can't be fulfilled right now (e.g. no SIM is online with room). */
+  available?: boolean;
 }
 
 export interface TransactionDataPlanSummary {
@@ -121,7 +123,9 @@ export type NotificationType =
   | "security"
   | "vtu_balance_low"
   | "sme_balance_low"
-  | "plan_price_drift";
+  | "plan_price_drift"
+  | "sim_pool_alert"
+  | "order_needs_review";
 
 export interface Notification {
   id: string;
@@ -188,7 +192,6 @@ export interface AdminDashboardStats {
   successfulTransactions: number;
   failedTransactions: number;
   pendingTransactions: number;
-  airtimeSalesToday: number;
   dataSalesToday: number;
   walletFundingToday: number;
 }

@@ -12,14 +12,13 @@ export function MobileBottomNav() {
   const moreRoutes = [
     "/dashboard/more",
     "/dashboard/wallet",
-    "/dashboard/transactions",
     "/dashboard/notifications",
     "/dashboard/profile",
     "/dashboard/support",
   ];
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 flex items-stretch border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-2xl items-stretch border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:bottom-4 sm:inset-x-4 sm:rounded-2xl sm:border sm:pb-0 sm:shadow-lg">
       {mobilePrimaryNavItems.map((item) => {
         const active =
           item.href === "/dashboard/more"

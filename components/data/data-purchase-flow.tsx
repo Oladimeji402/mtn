@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { AlertCircle, ArrowLeft, CircleCheckBig, Clock, Loader2, XCircle } from "lucide-react";
+import { AlertCircle, ArrowLeft, CircleCheckBig, Clock, Database, Loader2, Smartphone, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,9 @@ import { useIsDesktop } from "@/hooks/use-is-desktop";
 import { isMtnNumber } from "@/lib/validation";
 import { formatNaira, formatPhoneNumber } from "@/lib/format";
 import { purchaseDataAction } from "@/lib/actions/purchase";
-import { cn, screenPanelClass } from "@/lib/utils";
+import { PURCHASE_FAILED_MESSAGE } from "@/lib/customer-messages";
+import { GENERIC_ERROR_MESSAGE, errorText } from "@/lib/errors";
+import { cn, screenPadClass, screenPanelClass } from "@/lib/utils";
 import type { DataPlan, Transaction } from "@/types";
 
 type Step = "form" | "confirm" | "processing" | "success" | "pending" | "failed";
@@ -34,6 +36,9 @@ export function DataPurchaseFlow({
   const [plan, setPlan] = React.useState<DataPlan | null>(null);
   const [result, setResult] = React.useState<Transaction | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  // One key per purchase attempt: a repeat of the same attempt (double tap, retry after a network
+  // blip) returns the original purchase instead of charging the wallet again.
+  const attempt = React.useRef<{ key: string; signature: string } | null>(null);
 
   function handleContinue() {
     const digits = phoneNumber.replace(/\s/g, "");
@@ -55,7 +60,17 @@ export function DataPurchaseFlow({
     setStep("processing");
     setError(null);
     try {
-      const res = await purchaseDataAction({ phoneNumber, dataPlanId: plan.id });
+      // Bound to this exact number and plan, so changing either starts a fresh attempt.
+      const signature = `${phoneNumber}|${plan.id}`;
+      if (attempt.current?.signature !== signature) attempt.current = { key: crypto.randomUUID(), signature };
+      const response = await purchaseDataAction({ phoneNumber, dataPlanId: plan.id, idempotencyKey: attempt.current.key });
+      if (!response.ok) {
+        setError(errorText(response));
+        setStep("confirm");
+        return;
+      }
+      const res = response.data;
+      attempt.current = null;
       setResult(res);
       if (res.status === "successful") {
         setStep("success");
@@ -63,15 +78,16 @@ export function DataPurchaseFlow({
         setStep("pending");
       } else {
         setStep("failed");
-        toast.error(res.failureReason ?? "Purchase failed");
+        toast.error(PURCHASE_FAILED_MESSAGE);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not start purchase");
+    } catch {
+      setError(GENERIC_ERROR_MESSAGE);
       setStep("confirm");
     }
   }
 
   function reset() {
+    attempt.current = null;
     setStep("form");
     setPhoneNumber("");
     setPlan(null);
@@ -147,7 +163,7 @@ export function DataPurchaseFlow({
         </div>
         <div className="space-y-1">
           <p className="text-lg font-medium">Couldn&apos;t buy data</p>
-          <p className="text-sm text-muted-foreground">Your wallet was refunded.</p>
+          <p className="text-sm text-muted-foreground">{PURCHASE_FAILED_MESSAGE}</p>
         </div>
         <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:justify-center">
           <Button size="lg" onClick={reset}>Try again</Button>
@@ -200,32 +216,41 @@ export function DataPurchaseFlow({
 
   return (
     <>
-      <div className={cn("space-y-5", screenPanelClass)}>
-        <div className="space-y-1.5">
-          <Label htmlFor="phoneNumber">MTN phone number</Label>
+      <div className="space-y-4">
+        <section className={cn("space-y-3", screenPanelClass)}>
+          <Label htmlFor="phoneNumber" className="flex items-center gap-2 text-base font-semibold">
+            <Smartphone className="size-4 text-muted-foreground" />
+            Enter Phone Number
+          </Label>
           <Input
             id="phoneNumber"
             type="tel"
             inputMode="numeric"
-            placeholder="080X XXX XXXX"
+            placeholder="e.g. 08012345678"
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
             aria-invalid={!!phoneError}
+            className="h-12 text-base"
           />
           {phoneError ? <p className="text-xs text-destructive">{phoneError}</p> : null}
           <PhoneFavorites phoneNumber={phoneNumber} onSelect={setPhoneNumber} />
-        </div>
+        </section>
 
-        <div className="space-y-2">
-          <Label>Data plan</Label>
+        <section className={cn("space-y-3", screenPanelClass)}>
+          <h2 className="flex items-center gap-2 text-base font-semibold">
+            <Database className="size-4 text-muted-foreground" />
+            Select Data Plan
+          </h2>
           <DataPlanGrid plans={plans} selectedId={plan?.id ?? null} onSelect={setPlan} />
+        </section>
+
+        <div className={screenPadClass}>
+          <Button className="w-full" size="lg" onClick={handleContinue} disabled={!plan}>
+            {plan ? `Purchase ${plan.size} · ${formatNaira(plan.price, false)}` : "Select a data plan"}
+          </Button>
         </div>
 
-        <Button className="w-full" size="lg" onClick={handleContinue} disabled={!plan}>
-          {plan ? "Purchase" : "Select a data plan"}
-        </Button>
-
-        <p className="text-center text-xs text-muted-foreground">
+        <p className={cn("text-center text-xs text-muted-foreground", screenPadClass)}>
           Check your balance by dialing *323*4#
           <br />
           Data shows as &quot;Data Transfer&quot; or &quot;Bonus&quot; on the USSD screen, not in SMS

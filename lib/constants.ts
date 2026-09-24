@@ -6,16 +6,14 @@ export const APP_NAME = "Bunben Data Hub";
 export const SUPPORT_PHONE = "08030859828";
 export const SUPPORT_EMAIL = "bunben2023@gmail.com";
 
-export const QUICK_FUND_AMOUNTS = [1500, 2000, 5000, 10000, 20000, 50000];
+/** Tutorial video shown on the home screen — replace the file (same name) to change it. */
+export const FUND_WALLET_VIDEO_SRC = "/videos/fund-wallet.mp4";
 
-export const QUICK_AIRTIME_AMOUNTS = [100, 200, 500, 1000, 2000, 5000];
+export const QUICK_FUND_AMOUNTS = [1500, 2000, 5000, 10000, 20000, 50000];
 
 // Client-confirmed values (2026-09-15).
 export const MIN_FUNDING_AMOUNT = 1350;
 export const MAX_FUNDING_AMOUNT = 135000;
-
-export const MIN_AIRTIME_AMOUNT = 50;
-export const MAX_AIRTIME_AMOUNT = 50000;
 
 /**
  * Real MTN Nigeria mobile number prefixes, used as a client-side sanity check on purchase

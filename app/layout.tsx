@@ -18,11 +18,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: `${APP_NAME} — MTN Airtime & Data`,
+    default: `${APP_NAME} — MTN Data`,
     template: `%s | ${APP_NAME}`,
   },
   description:
-    "Buy MTN airtime and data.",
+    "Buy MTN data.",
   appleWebApp: { capable: true, statusBarStyle: "default", title: APP_NAME },
 };
 

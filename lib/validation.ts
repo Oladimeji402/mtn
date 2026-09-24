@@ -1,8 +1,6 @@
 import { z } from "zod";
 import {
-  MAX_AIRTIME_AMOUNT,
   MAX_FUNDING_AMOUNT,
-  MIN_AIRTIME_AMOUNT,
   MIN_FUNDING_AMOUNT,
   MTN_PREFIXES,
 } from "@/lib/constants";
@@ -104,16 +102,6 @@ export const fundWalletSchema = z.object({
 });
 
 export type FundWalletValues = z.infer<typeof fundWalletSchema>;
-
-export const buyAirtimeSchema = z.object({
-  phoneNumber: phoneNumberSchema,
-  amount: z.coerce
-    .number({ invalid_type_error: "Enter an amount" })
-    .min(MIN_AIRTIME_AMOUNT, `Minimum airtime amount is ₦${MIN_AIRTIME_AMOUNT.toLocaleString()}`)
-    .max(MAX_AIRTIME_AMOUNT, `Maximum airtime amount is ₦${MAX_AIRTIME_AMOUNT.toLocaleString()}`),
-});
-
-export type BuyAirtimeValues = z.infer<typeof buyAirtimeSchema>;
 
 export const buyDataSchema = z.object({
   phoneNumber: phoneNumberSchema,

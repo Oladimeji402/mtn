@@ -1,0 +1,17 @@
+{
+  "name": "bunben-sim-gateway",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Takes transfer jobs from the website, sends them from the client's MTN SIMs (USSD modems or the myMTN app on Android), and reports the result.",
+  "scripts": {
+    "start": "node index.mjs",
+    "try": "node index.mjs try",
+    "check": "node index.mjs check",
+    "test": "node --test test/*.test.mjs"
+  },
+  "engines": { "node": ">=20" },
+  "optionalDependencies": {
+    "serialport": "^12.0.0"
+  }
+}

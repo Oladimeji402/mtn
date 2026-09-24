@@ -9,6 +9,8 @@ import { CopyButton } from "@/components/shared/copy-button";
 import { TransactionStatusBadge } from "@/components/shared/status-badge";
 import { formatDate, formatNaira, formatPhoneNumber, formatTime } from "@/lib/format";
 import { requeryPurchaseAction } from "@/lib/actions/purchase";
+import { PURCHASE_FAILED_MESSAGE } from "@/lib/customer-messages";
+import { GENERIC_ERROR_MESSAGE, errorText } from "@/lib/errors";
 import { cn, screenPadClass, screenPanelClass } from "@/lib/utils";
 import type { Transaction } from "@/types";
 
@@ -19,15 +21,19 @@ export function TransactionDetail({ transaction }: { transaction: Transaction })
   async function handleCheckStatus() {
     setChecking(true);
     try {
-      const updated = await requeryPurchaseAction(transaction.id);
-      if (updated.status !== "processing") {
-        toast.success(`Status updated: ${updated.status}`);
+      const res = await requeryPurchaseAction(transaction.id);
+      if (!res.ok) {
+        toast.error(errorText(res));
+        return;
+      }
+      if (res.data.status !== "processing") {
+        toast.success(`Status updated: ${res.data.status}`);
         router.refresh();
       } else {
         toast.message("Still processing — check back shortly");
       }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not check status");
+    } catch {
+      toast.error(GENERIC_ERROR_MESSAGE);
     } finally {
       setChecking(false);
     }
@@ -93,7 +99,7 @@ export function TransactionDetail({ transaction }: { transaction: Transaction })
           </DetailRow>
           {transaction.failureReason ? (
             <DetailRow label="Note">
-              <span className="text-destructive">{transaction.failureReason}</span>
+              <span className="text-destructive">{PURCHASE_FAILED_MESSAGE}</span>
             </DetailRow>
           ) : null}
         </dl>

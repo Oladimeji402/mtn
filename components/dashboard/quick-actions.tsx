@@ -1,25 +1,30 @@
+import Image from "next/image";
 import Link from "next/link";
-import { History, Smartphone, User, Wifi } from "lucide-react";
+import { History, User, Wallet, type LucideIcon } from "lucide-react";
 import { cn, screenPadClass } from "@/lib/utils";
 
-const tiles = [
+type Tile = { href: string; label: string } & (
+  | { logo: string }
+  | { icon: LucideIcon; iconClassName: string }
+);
+
+const tiles: Tile[] = [
   {
     href: "/dashboard/data",
-    label: "Data",
-    icon: Wifi,
-    iconClassName: "bg-brand/20 text-brand-foreground",
+    label: "MTN Data",
+    logo: "/mtn-logo.jpg",
+  },
+  {
+    href: "/dashboard/wallet",
+    label: "Wallet",
+    icon: Wallet,
+    iconClassName: "bg-success/10 text-success",
   },
   {
     href: "/dashboard/transactions",
     label: "History",
     icon: History,
     iconClassName: "bg-info/10 text-info",
-  },
-  {
-    href: "/dashboard/airtime",
-    label: "Airtime",
-    icon: Smartphone,
-    iconClassName: "bg-success/10 text-success",
   },
   {
     href: "/dashboard/profile",
@@ -34,7 +39,7 @@ export function DashboardQuickActions() {
   return (
     <nav
       aria-label="Shortcuts"
-      className={cn("grid grid-cols-4 gap-2 py-5 lg:hidden", screenPadClass)}
+      className={cn("grid grid-cols-4 gap-2 py-5", screenPadClass)}
     >
       {tiles.map((tile) => (
         <Link
@@ -42,14 +47,24 @@ export function DashboardQuickActions() {
           href={tile.href}
           className="flex flex-col items-center gap-2 rounded-xl py-1 transition-colors active:bg-secondary/60"
         >
-          <span
-            className={cn(
-              "flex size-14 items-center justify-center rounded-2xl",
-              tile.iconClassName,
-            )}
-          >
-            <tile.icon className="size-6" />
-          </span>
+          {"logo" in tile ? (
+            <Image
+              src={tile.logo}
+              alt=""
+              width={56}
+              height={56}
+              className="size-14 rounded-2xl"
+            />
+          ) : (
+            <span
+              className={cn(
+                "flex size-14 items-center justify-center rounded-2xl",
+                tile.iconClassName,
+              )}
+            >
+              <tile.icon className="size-6" />
+            </span>
+          )}
           <span className="text-xs font-medium">{tile.label}</span>
         </Link>
       ))}

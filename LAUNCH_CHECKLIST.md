@@ -296,6 +296,56 @@ primary data provider — routing is per-plan via `data_plans.provider` (`'vtu'`
   URL must be pasted into their dashboard manually (no API to set it) — whatever the current
   ngrok URL is for local testing; the real production URL once deployed.
 
+## Data source: the client's own SIMs (built 2026-09-21, not live)
+
+**Why:** the client owns 15 MTN SIMs with active data and today gifts 5GB from one SIM to a customer by hand,
+swapping SIMs as each hits its limit. She wants the website to do that. SMEData.ng/VTU.ng are *not* that: they
+sell the provider's own stock and never touch her SIMs (Architecture B). This is Architecture A.
+
+**Research findings (sources in the 2026-09-21 report):** MTN's consumer gifting allows **5GB/day per SIM**, sizes
+100MB–5GB, ≥100MB must remain, 10 free transfers/month then a fee, recipient can't roll data over. MTN has an
+official *Data Gifting API* on developers.mtn.com, but per its spec it **buys a product charged to a sender's
+account** rather than moving existing bundle data, has no status query/webhook, and needs MTN onboarding. There is
+**no official API that controls a physical SIM**. Third-party "SIM hosting" services (Ogdams, Simhostng) automate
+USSD on the reseller's own SIMs; their MTN approval/risk is not documented. Multi-SIM hardware resembles what the
+NCC calls SIM boxes (call-termination fraud): get MTN/NCC's view in writing before buying hardware. MTN Business's
+reseller terms could not be read; treat resale/automation permission as **unverified**.
+
+**What was built** (branch `staging`; nothing changes for customers until SIM plans are activated):
+- Migrations `0027` (notification types) and `0028`: `data_sources` (one row per SIM: number, data left, daily
+  limit, usage, monthly transfers, last seen), `fulfillment_jobs` (one transfer attempt each), `fn_sim_*` functions,
+  four inactive `provider='sim'` plans (`mtn-{1,2,3,5}gb-sim`, placeholder prices). Only phone numbers are stored.
+- **Allocation is concurrency-safe:** one advisory lock plus in-transaction reservation. Tested: 20 simultaneous
+  orders on 8 SIMs gave exactly 8 allocations, 8 different SIMs, 12 turned away, no SIM handed out twice.
+- **Rotation:** a `limit_reached` or `insufficient_bundle` report marks that SIM unavailable and moves the same
+  order to the next SIM. Prefers SIMs still inside their 10 free monthly transfers, then least recently used.
+- **Provider layer** (`lib/fulfillment/`): `DataFulfillmentProvider` with `smedata` and `sim` providers; VTU keeps
+  its original inline path (switched off). Purchases also gained an idempotency key (a double tap can't charge
+  twice) and an **`unknown` state**: a provider timeout or crashed gateway now HOLDS the order for an admin instead
+  of refunding (which could pay twice) or retrying.
+- Gateway API `app/api/gateway/{heartbeat,claim,report}`, bearer-token auth (`GATEWAY_API_TOKEN`, fails closed).
+- Admin: **Admin > SIMs** (add/edit/switch off SIMs, capacity, recent transfers, resolve buttons) and resolve
+  buttons on the transaction page. Every resolve writes to `audit_log`.
+- `gateway/`: the program that runs next to the SIMs, with a simulated driver and an AT-modem driver. See its README.
+
+**Tested:** 21 SQL logic checks, the 20-way concurrency test, 18 gateway unit tests, and a 31-check end-to-end run
+(real gateway process + API + database + a throwaway customer): happy path, limit rotation, unclear reply held,
+crash mid-transfer never re-dialled, stale job refunded, endpoint security, and the admin refund button.
+
+**NOT tested / must wait (do not activate SIM plans until these are done):**
+1. Any real SIM or modem. The AT driver is tested only against a scripted fake modem.
+2. MTN's real reply wording, so every order is `unknown` until reply patterns are configured (deliberately safe).
+3. The exact USSD string/amount format for how the client actually transfers (default is MTN's published
+   `*312*{recipient}*{amount}#`).
+4. A purchase placed through the customer UI on a SIM plan (its parts are each tested; the wiring
+   `purchaseData` → `simPoolProvider` → `fn_sim_allocate` is type-checked but not run end to end).
+5. Whether MTN allows this at volume, whether the recipient's data expires with the sender's bundle (reported,
+   unverified), and SIM-hosting alternatives.
+6. Real prices for the SIM plans (placeholders copied from SMEData).
+
+**To do before launch of this feature:** set `GATEWAY_API_TOKEN` in Vercel (Production and Preview) and on the
+gateway machine; add the real SIM numbers in Admin > SIMs; run one real transfer with `npm run try`; then activate.
+
 ## Blocking actual launch
 
 1. **Monipay's fee is unresolved.** ~8.87% on a bank transfer is high; client is following up
@@ -446,3 +496,13 @@ primary data provider — routing is per-plan via `data_plans.provider` (`'vtu'`
   deployed manually via CLI, so `git push` did nothing to the live site for a while. Now
   connected; future pushes to `main` auto-deploy. If the live site ever looks stale again,
   check Project Settings → Git in the Vercel dashboard before assuming a build failure.
+
+## Data source: the client's SIMs through the myMTN app (gateway)
+
+The MTN official Customer Data Transfer API route was built and then removed (2026-09-24, client decision);
+its inactive plan `mtn-5gb-transfer` is hidden from customers and the `data_sources.transport` column is unused.
+The live route is the gateway's myMTN app driver: see `gateway/README.md`.
+
+- [ ] Gateway server running (Android + myMTN, one profile per SIM), `GATEWAY_API_TOKEN` set in Vercel and the gateway.
+- [ ] Each SIM added in Admin → SIMs and logged in to myMTN ("Log in to myMTN" on the SIM).
+- [ ] One dry run (`MYMTN_DRY_RUN=1`), then one real order end to end, before activating `mtn-5gb-sim`.

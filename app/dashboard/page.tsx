@@ -3,6 +3,9 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { WalletBalanceCard } from "@/components/dashboard/wallet-balance-card";
 import { DashboardQuickActions } from "@/components/dashboard/quick-actions";
+import { ContactActions } from "@/components/dashboard/contact-actions";
+import { FundWalletVideo } from "@/components/dashboard/fund-wallet-video";
+import { ServicesCard } from "@/components/dashboard/services-card";
 import { UsageStat } from "@/components/dashboard/usage-stat";
 import { TransactionCard } from "@/components/transactions/transaction-card";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -24,11 +27,18 @@ export default async function DashboardPage() {
   const recent = transactions.slice(0, 3);
 
   return (
-    // -mt-3 cancels the shell's mobile top padding so the balance card meets the app bar.
-    <div className="-mt-3 space-y-0 sm:mt-0 sm:space-y-5">
-      <WalletBalanceCard balance={wallet.balance} />
+    <div className="space-y-0 sm:space-y-5">
+      <div className="px-4 pt-2 sm:p-0">
+        <WalletBalanceCard balance={wallet.balance} />
+      </div>
 
       <DashboardQuickActions />
+
+      <FundWalletVideo />
+
+      <ContactActions />
+
+      <ServicesCard />
 
       <div className="border-t px-4 py-5 sm:rounded-xl sm:border sm:p-6">
         <div className="mb-4">
@@ -61,7 +71,7 @@ export default async function DashboardPage() {
           <EmptyState
             icon={Receipt}
             title="No transactions yet"
-            description="Buy airtime or data to get started."
+            description="Buy MTN data to get started."
             className="bg-transparent py-8"
           />
         )}
