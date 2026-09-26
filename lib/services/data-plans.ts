@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { canUseTestPlans, isTestPlanId } from "@/lib/test-plans";
 import type { DataPlan } from "@/types";
 
 function toDataPlan(row: {
@@ -35,7 +36,8 @@ export async function getDataPlans(): Promise<DataPlan[]> {
     .order("size_in_mb", { ascending: true });
 
   if (error) throw new Error(error.message);
-  const rows = data ?? [];
+  const showTestPlans = (data ?? []).some((r) => isTestPlanId(r.id)) && (await canUseTestPlans());
+  const rows = (data ?? []).filter((r) => showTestPlans || !isTestPlanId(r.id));
 
   // SIM-pool plans depend on live capacity (a SIM online with daily allowance and data left).
   // Checked with the service role because the pool functions are not exposed to customers.
