@@ -14,6 +14,7 @@ import { assertNotRateLimited } from "@/lib/rate-limit";
 import { UserError, type ActionResult } from "@/lib/errors";
 import { reportError } from "@/lib/error-log";
 import { runAction } from "@/lib/run-action";
+import { canUseTestPlans, isTestPlanId } from "@/lib/test-plans";
 import { getTransaction } from "@/lib/services/transactions";
 import type { Transaction } from "@/types";
 
@@ -64,6 +65,7 @@ async function purchaseData(input: { phoneNumber: string; dataPlanId: string; id
     .eq("active", true)
     .maybeSingle();
   if (!plan) throw new UserError("This data plan is no longer available.");
+  if (isTestPlanId(plan.id) && !(await canUseTestPlans())) throw new UserError("This data plan is no longer available.");
   if (plan.provider === "vtu" && !plan.vtu_variation_id) {
     throw new Error("This plan isn't linked to a provider yet — contact support.");
   }
